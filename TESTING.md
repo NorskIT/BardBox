@@ -3,7 +3,7 @@
 ## Completed without launching the game
 
 - Release compilation against installed Valheim DLLs succeeds.
-- The current test run passes 211 assertions, including installed-game Harmony method
+- The current test run passes 242 assertions, including installed-game Harmony method
   signatures, all shipped WAV files and all PNG dimensions/color types.
 - Core tests exercise strongest source, weaker-source fallback, stacking of different
   tapes, source expiry, invalid identifiers/quality and death/logout clearing.
@@ -191,3 +191,41 @@ speakers. Listening/drop comparisons and Steam/PlayFab internet testing remain.
 - No Ranged 1.2.3 compatibility in the same isolated process: all eleven tapes equip/select, retain enabled recipes and pass the crafting gate; bow/arrow recipes and equipment remain blocked.
 - Production profiles and servers were not modified.
 - The full world regression in smoke-20261014-231842 also passed: movement/jumping, overhead pose, hold/toggle controls, music/buffs, shockwaves, drift correction, tape changes, stop, teleport, death and respawn.
+
+
+## 0.1.5 range and background music
+
+Core tests cover radius limits/fallback, distance attenuation, heartbeat expiry,
+metadata validation and monotonic sequences (242 assertions overall).
+
+Isolated Valheim 1.0.17 world test with No Ranged 1.2.3 passed:
+- World sphere geometry at 20/500/2000 m, live updates, emitter centre and cleanup.
+- Actual MusicMan source retains playback while its PCM filter produces silence.
+- Music source replacement transfers the filter and releases the old source.
+- Personal mute restores game music; unmute applies attenuation again.
+- ForestCrawler's real MusicSilence helper loaded separately and tested in both
+  stop orders; neither helper releases the other's attenuation/mute.
+- Native music volume and saved preferences preserved.
+- Existing movement, jumps, pose, tape selection, death/respawn and audio tests.
+
+Two isolated game processes using native ZSocket2, ZNet and ZRoutedRpc passed:
+- Late join seeks into an already playing song.
+- Initial radius 500 m overrides the client's 20 m; locked client edits rejected.
+- Live 500/2000/500 m changes propagate through ServerSync.
+- Music continues at 490/1990 m with the musician's Player object unloaded.
+- Sound attenuates, cuts off outside radius, and seeks on reentry; one emitter.
+- Buffs remain within 20 m and return when the listener approaches again.
+- Server volume, personal mute and stop propagation retain their behaviour.
+- 150 timeline samples per process: maximum error 26.5 ms host, 31.6 ms client
+  against the synchronized clock in the recorded localhost run.
+
+Evidence: artifacts/smoke-20261014-235930 (world/presentation),
+artifacts/smoke-20261014-235941 and smoke-20261014-235943 (network).
+These are automated local tests, not a measurement of speaker/headphone latency.
+Internet multiplayer, subjective loudness and the debug sphere's usability in
+varied terrain still need user playtesting.
+
+A second two-process run also passed with roles reversed: a remote client
+published its music through the server, the host received sound and the nearby
+buff, and the client's release stopped the host emitter. Evidence:
+artifacts/smoke-20261015-000212 and smoke-20261015-000213.

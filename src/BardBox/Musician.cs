@@ -16,19 +16,15 @@ internal sealed class Musician : MonoBehaviour
     private readonly PlaybackInput controls=new PlaybackInput();
     private float lastInput=-100,nextPublish,nextBuff;
     private long started;
-    private string audioId="";
-    private long audioStart;
     private const string EpochKey=Catalog.Prefix+"epoch3",SessionKey=Catalog.Prefix+"session3",HashKey=Catalog.Prefix+"hash3";
     private string epoch="",session="",songHash="",warnedSession="";
-    private double localStarted,nextSync;
+    private double localStarted;
     private bool mediaMatches;
     private bool LocalOwner=>view && view.IsOwner() && player==Player.m_localPlayer;
     private double Elapsed=>Math.Max(0,LocalOwner && (started==0 || !MusicClock.Ready)?MusicClock.Local-localStarted:Now-started/(double)TimeSpan.TicksPerSecond);
     private readonly CueClock cueClock=new CueClock();
     private readonly Shockwave shockwave=new Shockwave();
     private AudioSource? source;
-    private MusicAmplifier? amplifier;
-    private GameObject? emitter;
     private readonly Contributions contributions=new Contributions();
     internal Tape? ActiveTape {get;private set;}
     internal int Quality {get;private set;}
@@ -58,7 +54,7 @@ internal sealed class Musician : MonoBehaviour
     private void UpdateLocal()
     {
         if(Blocked() || Time.unscaledTime-lastInput>.3f)
-        {if(controls.Playing || ActiveTape!=null)controls.Interrupt();}
+        {if(controls.Playing || ActiveTape!=null){Plugin.Instance.Trace("Playback interrupted: blocked="+Blocked()+" inputAge="+(Time.unscaledTime-lastInput)+" focus="+Application.isFocused+" box="+HasBox(player)+" dead="+player.IsDead()+" teleport="+player.IsTeleporting()+" cutscene="+player.InCutscene()+" stagger="+player.IsStaggering()+" dodge="+player.InDodge()+" swim="+player.IsSwimming()+" attached="+player.IsAttached()+" inventory="+InventoryGui.IsVisible()+" menu="+Menu.IsVisible()+" console="+Console.IsVisible()+" text="+TextInput.IsVisible()+" store="+StoreGui.IsVisible()+" chat="+(Chat.instance && Chat.instance.HasFocus()));controls.Interrupt();}}
         var ammo=player.GetAmmoItem();
         Tape? selected=ammo?.m_dropPrefab?Catalog.Find(ammo.m_dropPrefab.name):null;
         if(ammo==null || !player.GetInventory().ContainsItem(ammo))selected=null;
@@ -83,6 +79,7 @@ internal sealed class Musician : MonoBehaviour
         if(changed || Time.unscaledTime>=nextPublish)
         {
             nextPublish=Time.unscaledTime+1;
+            RadioNetwork.Publish(player,AudioState());
             var zdo=view.GetZDO();
             zdo.Set(TapeKey,ActiveTape?.Id??"");zdo.Set(QualityKey,Quality);zdo.Set(StartKey,started);zdo.Set(HeartbeatKey,Ticks);zdo.Set(EpochKey,epoch);zdo.Set(SessionKey,session);zdo.Set(HashKey,songHash);zdo.Set(ActiveKey,ActiveTape!=null && started>0 && MusicClock.Ready);
         }
@@ -112,39 +109,15 @@ internal sealed class Musician : MonoBehaviour
         }
         return match;
     }
+    internal RadioState? AudioState()=>ActiveTape==null?null:new RadioState {
+        Id=player.GetZDOID(),Tape=ActiveTape.Id,Quality=Quality,Session=session,Hash=songHash,
+        Start=started>0?started/(double)TimeSpan.TicksPerSecond:MusicClock.Now-(MusicClock.Local-localStarted),
+        FreshAt=MusicClock.Now,Position=player.transform.position+Vector3.up*2
+    };
     private void UpdateSound()
     {
-        var local=Player.m_localPlayer;
-        var distance=local?Vector3.Distance(player.transform.position,local.transform.position):float.PositiveInfinity;
-        var clip=ActiveTape!=null?AudioLibrary.Get(ActiveTape.Id):null;
-        if(!mediaMatches || !clip || distance>=20 || Plugin.Instance.Volume.Value<=0 || Plugin.Instance.ListenerVolume.Value<=0)
-        {if(source)source.Stop();audioId="";return;}
-        if(!source)
-        {
-            emitter=new GameObject("BardBox audio");source=emitter.AddComponent<AudioSource>();
-            amplifier=emitter.AddComponent<MusicAmplifier>();
-            source.playOnAwake=false;source.loop=true;source.spatialBlend=1;source.dopplerLevel=0;
-            source.minDistance=3;source.maxDistance=20;source.rolloffMode=AudioRolloffMode.Linear;
-            source.outputAudioMixerGroup=Resources.FindObjectsOfTypeAll<AudioMixerGroup>().FirstOrDefault(g=>g.name=="SFX");
-        }
-        emitter!.transform.position=player.transform.position+Vector3.up*2;
-        source!.volume=Mathf.Min(1,Plugin.Instance.Volume.Value)*Plugin.Instance.ListenerVolume.Value;
-        amplifier!.Gain=Mathf.Max(1,Plugin.Instance.Volume.Value);
-        if(audioId!=ActiveTape!.Id || audioStart!=started || !source.isPlaying)
-        {
-            source.Stop();source.clip=clip;audioId=ActiveTape.Id;audioStart=started;
-            double elapsed=Elapsed;
-            source.timeSamples=PlaybackRules.Sample(elapsed,clip.frequency,clip.samples);source.Play();
-            nextSync=MusicClock.Local+.25;
-        }
-        else if(MusicClock.Local>=nextSync)
-        {
-            nextSync=MusicClock.Local+.25;
-            int expected=PlaybackRules.Sample(Elapsed,clip.frequency,clip.samples),actual=source.timeSamples;
-            double error=PlaybackRules.ErrorSeconds(actual,expected,clip.frequency,clip.samples);
-            if(Math.Abs(error)>PlaybackRules.CorrectionThreshold){source.timeSamples=expected;cueClock.Reset();shockwave.Hide();}
-            Plugin.Instance.Trace(player.GetZDOID()+" session="+session+" expected="+(expected/(double)clip.frequency).ToString("F6")+" actual="+(actual/(double)clip.frequency).ToString("F6")+" error="+error.ToString("F6"));
-        }
+        source=RadioPlayback.Source(player.GetZDOID());
+        if(RadioPlayback.ConsumeCorrection(player.GetZDOID())){cueClock.Reset();shockwave.Hide();}
     }
     private void UpdateShockwave()
     {
@@ -185,10 +158,10 @@ internal sealed class Musician : MonoBehaviour
     {
         if(view && view.IsValid() && view.IsOwner())view.GetZDO().Set(ActiveKey,false);
         ActiveTape=null;controls.Interrupt();cueClock.Reset();shockwave.Hide();
-        if(player==Player.m_localPlayer)ClearBuffs();
-        if(source)source.Stop();
+        if(player==Player.m_localPlayer){RadioNetwork.Publish(player,null);ClearBuffs();}
+        if(player==Player.m_localPlayer && source)source.Stop();
     }
-    private void OnDestroy(){OnDisable();shockwave.Destroy();if(emitter)Destroy(emitter);var pose=GetComponent<CarryPose>();if(pose)Destroy(pose);}
+    private void OnDestroy(){OnDisable();shockwave.Destroy();var pose=GetComponent<CarryPose>();if(pose)Destroy(pose);}
 }
 
 [HarmonyPatch(typeof(Player),nameof(Player.SetControls))]

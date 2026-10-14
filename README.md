@@ -6,9 +6,13 @@ Bring music to your adventures! Craft a Boombox, equip a reusable tape like arro
 
 **Play:** hold Attack to play and release to stop. For toggle controls, set `Controls.TogglePlayback = true` in `BepInEx/config/norskit_bardbox_plugin.cfg`. Each new start plays from the beginning.
 
-**Requires:** BepInExPack Valheim and Jotunn 2.30.2+. Install the same BardBox version on all players and the server, with matching song files on players' clients. Version 0.1.4 is a test build.
+**Requires:** BepInExPack Valheim and Jotunn 2.30.2+. Install the same BardBox version on all players and the server, with matching song files on players' clients. Version 0.1.5 is a test build.
 
 **Volume:** `Audio.Volume` is server-synced: `1.0` = 100%, `5.0` = 500%. `Audio.ListenerVolume` is your personal volume (0 = mute, 1 = full server volume).
+
+**Range:** `Audio.Range` sets the server-wide sound radius (default 500 m, maximum 2000 m). Buffs stay within 20 m. Game music fades out while a boombox is audible; disable this with `Audio.MuteGameMusic`.
+
+**Show the zone:** enable `Debug.ShowAudioRange`, or assign `Debug.ToggleAudioRangeKey`. The marker is visible only to you, including a preview while holding your Boombox.
 
 ## Items
 

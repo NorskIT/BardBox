@@ -5,4 +5,5 @@
   <ItemGroup><Compile Include="../src/BardBox/PlaybackInput.cs" Link="PlaybackInput.cs"/></ItemGroup>
   <ItemGroup><EmbeddedResource Include="../assets/songs.tsv" LogicalName="BardBox.Songs.tsv"/></ItemGroup>
   <ItemGroup><Compile Include="../src/BardBox/AudioGain.cs" Link="AudioGain.cs"/></ItemGroup>
+  <ItemGroup><Compile Include="../src/BardBox/RadioRules.cs" Link="RadioRules.cs"/></ItemGroup>
 </Project>

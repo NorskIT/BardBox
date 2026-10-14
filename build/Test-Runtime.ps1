@@ -1,4 +1,4 @@
-param([switch]$PoseBaseline,[switch]$World,[ValidateSet('','host','client')][string]$NetworkRole='', [string]$Coordination='', [string]$NoRangedDll='')
+param([switch]$PoseBaseline,[switch]$World,[ValidateSet('','host','client')][string]$NetworkRole='', [string]$Coordination='', [string]$NoRangedDll='', [string]$ForestMusicDll='')
 $ErrorActionPreference='Stop'
 $root=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $game='C:\Program Files (x86)\Steam\steamapps\common\Valheim'
@@ -19,6 +19,7 @@ if($NoRangedDll){
     New-Item -ItemType Directory -Force $noRanged | Out-Null
     Copy-Item -LiteralPath $NoRangedDll -Destination (Join-Path $noRanged 'NoRanged.dll')
 }
+$priorForest=$env:BARD_FOREST_MUSIC_DLL
 $priorTarget=$env:DOORSTOP_TARGET_ASSEMBLY
 $priorOutput=$env:BARD_SMOKE_OUTPUT
 $priorBaseline=$env:BARD_POSE_BASELINE
@@ -26,6 +27,7 @@ $priorWorld=$env:BARD_WORLD_TEST
 $priorNetworkRole=$env:BARD_NETWORK_ROLE
 $priorNetworkCoord=$env:BARD_NETWORK_COORD
 try {
+    $env:BARD_FOREST_MUSIC_DLL=$ForestMusicDll
     $env:BARD_NETWORK_ROLE=$NetworkRole
     $env:BARD_NETWORK_COORD=$Coordination
     $env:BARD_WORLD_TEST=if($World){'1'}else{'0'}
@@ -36,6 +38,7 @@ try {
     $process.Id | Set-Content "$stage/process-id.txt"
     Write-Output "Isolated smoke process $($process.Id): $stage"
 } finally {
+    $env:BARD_FOREST_MUSIC_DLL=$priorForest
     $env:DOORSTOP_TARGET_ASSEMBLY=$priorTarget
     $env:BARD_SMOKE_OUTPUT=$priorOutput
     $env:BARD_POSE_BASELINE=$priorBaseline

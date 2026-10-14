@@ -78,7 +78,7 @@ public sealed class Smoke : BaseUnityPlugin
         if(p.GetVisEquipment().m_rightHand.position.y-p.transform.position.y<1.8f)
             File.WriteAllText(Path.Combine(folder,"render-failure.txt"),"Render interpolation overwrote the overhead grip");
     }
-    private void Update()
+    private void FixedUpdate()
     {
         if(worldInput && Player.m_localPlayer)
             Player.m_localPlayer.SetControls(moveInput, false,playInput,false,false,false,false,jumpInput,false,runInput,false,false);
@@ -140,6 +140,8 @@ public sealed class Smoke : BaseUnityPlugin
         Check(player.GetSEMan().HaveStatusEffect("NorskIT_BardBox_SE_trailblazer".GetStableHashCode()),"World music buff missing");
         var audio=(AudioSource)AccessTools.Field(musician.GetType(),"source").GetValue(musician);
         Check(audio && audio.isPlaying,"World audio not playing");
+        var radioStates=(System.Collections.IEnumerable)AccessTools.Property(typeof(BardBox.Plugin).Assembly.GetType("BardBox.RadioNetwork"),"States").GetValue(null);
+        Check(radioStates.Cast<object>().Any(),"Host playback missing from server relay registry");
         var gainType=typeof(BardBox.Plugin).Assembly.GetType("BardBox.MusicAmplifier");
         var gainAudit=new Harmony("norskit_bardbox_gain_audit");
         gainAudit.Patch(AccessTools.Method(gainType,"OnAudioFilterRead"),prefix:new HarmonyMethod(typeof(Smoke),nameof(BeforeGain)),postfix:new HarmonyMethod(typeof(Smoke),nameof(AfterGain)));
@@ -157,6 +159,7 @@ public sealed class Smoke : BaseUnityPlugin
         Check(player.GetVisEquipment().m_rightHand.position.y>player.transform.position.y+1.8f,"World right grip not overhead");
         capture=player.GetVisual();captureName="world-playing.png";
         yield return new WaitForSecondsRealtime(.2f);
+        var presentation=RangePresentationCases();while(presentation.MoveNext())yield return presentation.Current;
         var origin=player.transform.position;moveInput=Vector3.forward;
         yield return new WaitForSecondsRealtime(1);
         moveInput=Vector3.zero;
@@ -274,6 +277,79 @@ public sealed class Smoke : BaseUnityPlugin
         worldInput=false;
         Check(!File.Exists(Path.Combine(folder,"render-failure.txt")),"Rendered pose was overwritten by interpolation");
         Logger.LogInfo("WORLD PASS: cape, walking, hold/release/restart, tape swap, audio/buff expiry, teleport, death and respawn");
+    }
+    private IEnumerator RangePresentationCases()
+    {
+        var plugin=AccessTools.Field(typeof(BardBox.Plugin),"Instance").GetValue(null);
+        var assembly=typeof(BardBox.Plugin).Assembly;
+        var show=(BepInEx.Configuration.ConfigEntry<bool>)AccessTools.Field(typeof(BardBox.Plugin),"ShowAudioRange").GetValue(plugin);
+        var radius=(BepInEx.Configuration.ConfigEntry<float>)AccessTools.Field(typeof(BardBox.Plugin),"AudioRange").GetValue(plugin);
+        var listener=(BepInEx.Configuration.ConfigEntry<float>)AccessTools.Field(typeof(BardBox.Plugin),"ListenerVolume").GetValue(plugin);
+        var duckEnabled=(BepInEx.Configuration.ConfigEntry<bool>)AccessTools.Field(typeof(BardBox.Plugin),"MuteGameMusic").GetValue(plugin);
+        var duck=assembly.GetType("BardBox.MusicDucking");var filterType=assembly.GetType("BardBox.MusicDuckFilter");
+        var manager=MusicMan.instance;
+        var music=(AudioSource)AccessTools.Field(typeof(MusicMan),"m_musicSource").GetValue(manager);
+        float master=MusicMan.m_masterMusicVolume,savedPreference=PlatformPrefs.GetFloat("MusicVolume",1);
+        var track=manager.m_music.First(m=>m.m_name=="meadows" && m.m_enabled && m.m_clips.Length>0 && m.m_clips[0]);
+        MusicMan.m_masterMusicVolume=.75f;manager.TriggerMusic(track.m_name);
+        yield return new WaitForSecondsRealtime(6);
+        Check(music.isPlaying,"Game music scheduling was stopped");
+        Check((float)AccessTools.Property(duck,"Gain").GetValue(null)==0 && music.GetComponent(filterType),"Game music not faded down");
+        var filter=music.GetComponent(filterType);var samples=new[]{.2f,-.2f};
+        AccessTools.Method(filterType,"OnAudioFilterRead").Invoke(filter,new object[]{samples,1});
+        Check(samples.All(v=>v==0),"Music filter did not silence PCM");
+        var musicField=AccessTools.Field(typeof(MusicMan),"m_musicSource");
+        var replacement=new GameObject("BardBox test replacement music").AddComponent<AudioSource>();
+        replacement.clip=music.clip;replacement.loop=true;replacement.Play();musicField.SetValue(manager,replacement);
+        yield return new WaitForSecondsRealtime(.2f);
+        Check(!music.GetComponent(filterType) && replacement.GetComponent(filterType),"Duck filter did not follow replaced MusicMan source");
+        musicField.SetValue(manager,music);yield return new WaitForSecondsRealtime(.2f);
+        Check(music.GetComponent(filterType) && !replacement.GetComponent(filterType),"Replacement cleanup failed");Destroy(replacement.gameObject);
+        show.Value=true;
+        foreach(float value in new[]{20f,500f,2000f})
+        {
+            radius.Value=value;yield return new WaitForSecondsRealtime(.15f);
+            var root=GameObject.Find("BardBox audio range");
+            Check(root && root.transform.localScale.x==value,"Range visualization did not update");
+            Check(root.GetComponentsInChildren<LineRenderer>().Length==3,"Missing sphere circles");
+            Check(Vector3.Distance(root.transform.position,Player.m_localPlayer.transform.position+Vector3.up*2)<.1f,"Range center not on emitter");
+            if(value==20)PreviewVisual(root,"audio-range-preview.png",true);
+        }
+        show.Value=false;radius.Value=500;yield return new WaitForSecondsRealtime(.15f);
+        Check(!GameObject.Find("BardBox audio range"),"Range debug not cleaned up");
+        listener.Value=0;yield return new WaitForSecondsRealtime(1.2f);
+        Check((float)AccessTools.Property(duck,"Gain").GetValue(null)==1 && !music.GetComponent(filterType),"Personal mute left game music suppressed");
+        listener.Value=1;yield return new WaitForSecondsRealtime(.7f);
+        Check((float)AccessTools.Property(duck,"Gain").GetValue(null)==0,"Unmute failed to duck music");
+        // Load the real ForestCrawler mute helper without starting the encounter plugin.
+        var forestPath=Environment.GetEnvironmentVariable("BARD_FOREST_MUSIC_DLL");
+        Type? forestType=string.IsNullOrEmpty(forestPath)?null:System.Reflection.Assembly.LoadFrom(forestPath).GetType("ForestCrawler.MusicSilence");
+        var forest=forestType==null?null:Activator.CreateInstance(forestType,true);
+        void BeginForest(){if(forest!=null)AccessTools.Method(forestType,"Begin").Invoke(forest,new object[]{music});else music.mute=true;}
+        void EndForest(bool previous){if(forest!=null)AccessTools.Method(forestType,"Clear").Invoke(forest,null);else music.mute=previous;}
+        // Exercise independent mute ownership in both orders.
+        foreach(bool forestFirst in new[]{true,false})
+        {
+            duckEnabled.Value=false;yield return new WaitForSecondsRealtime(1.2f);
+            bool previousMute=music.mute;
+            if(forestFirst)BeginForest();
+            duckEnabled.Value=true;yield return new WaitForSecondsRealtime(.7f);
+            if(!forestFirst){previousMute=music.mute;BeginForest();}
+            if(forestFirst)
+            {
+                EndForest(previousMute);Check((float)AccessTools.Property(duck,"Gain").GetValue(null)==0,"Forest cleanup released BardBox attenuation");
+                duckEnabled.Value=false;yield return new WaitForSecondsRealtime(1.2f);
+            }
+            else
+            {
+                duckEnabled.Value=false;yield return new WaitForSecondsRealtime(1.2f);Check(music.mute,"BardBox cleanup released Forest mute");
+                EndForest(previousMute);
+            }
+            Check(music.mute==previousMute && !music.GetComponent(filterType),"Mute ownership not restored");
+        }
+        Check(MusicMan.m_masterMusicVolume==.75f && PlatformPrefs.GetFloat("MusicVolume",1)==savedPreference,"Music preferences modified");
+        MusicMan.m_masterMusicVolume=master;duckEnabled.Value=true;
+        File.WriteAllText(Path.Combine(folder,"range-presentation-result.txt"),"PASS: 20/500/2000m world spheres; live radius/cleanup; actual MusicMan PCM muted with scheduling alive; personal mute restores; independent ForestCrawler-style mute ownership in both orders; preferences preserved. ForestCrawler helper loaded: "+(forest!=null));
     }
     private void PrepareDressedPlayer()
     {

@@ -4,14 +4,14 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <AssemblyName>BardBox</AssemblyName>
-    <Version>0.1.4</Version>
+    <Version>0.1.5</Version>
     <GameDir Condition="'$(GameDir)'==''">C:\Program Files (x86)\Steam\steamapps\common\Valheim</GameDir>
     <ProfileDir Condition="'$(ProfileDir)'==''">$(APPDATA)\com.kesomannen.gale\valheim\profiles\Prod-v1</ProfileDir>
     <Managed>$(GameDir)\valheim_Data\Managed</Managed>
     <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="$(Managed)\assembly_valheim.dll;$(Managed)\assembly_utils.dll;$(Managed)\UnityEngine.dll;$(Managed)\UnityEngine.CoreModule.dll;$(Managed)\UnityEngine.AnimationModule.dll;$(Managed)\UnityEngine.AudioModule.dll;$(Managed)\UnityEngine.PhysicsModule.dll;$(Managed)\UnityEngine.AssetBundleModule.dll;$(Managed)\gui_framework.dll;$(Managed)\UnityEngine.UI.dll;$(Managed)\Unity.TextMeshPro.dll;$(Managed)\Splatform.dll"><Private>false</Private></Reference>
+    <Reference Include="$(Managed)\assembly_valheim.dll;$(Managed)\assembly_utils.dll;$(Managed)\UnityEngine.dll;$(Managed)\UnityEngine.CoreModule.dll;$(Managed)\UnityEngine.AnimationModule.dll;$(Managed)\UnityEngine.AudioModule.dll;$(Managed)\UnityEngine.InputLegacyModule.dll;$(Managed)\UnityEngine.IMGUIModule.dll;$(Managed)\UnityEngine.PhysicsModule.dll;$(Managed)\UnityEngine.AssetBundleModule.dll;$(Managed)\gui_framework.dll;$(Managed)\UnityEngine.UI.dll;$(Managed)\Unity.TextMeshPro.dll;$(Managed)\Splatform.dll"><Private>false</Private></Reference>
     <Reference Include="BepInEx"><HintPath>$(ProfileDir)\BepInEx\core\BepInEx.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="0Harmony"><HintPath>$(ProfileDir)\BepInEx\core\0Harmony.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Jotunn"><HintPath>$(ProfileDir)\BepInEx\plugins\ValheimModding-Jotunn\Jotunn.dll</HintPath><Private>false</Private></Reference>

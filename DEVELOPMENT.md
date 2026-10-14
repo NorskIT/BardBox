@@ -1,4 +1,4 @@
-# BardBox 0.1.4 — development build
+# BardBox 0.1.5 — development build
 
 Craft a Boombox, select a reusable tape like ammunition, and hold Attack to play.
 Release to stop; each new press starts the sound from the beginning. Set
@@ -138,4 +138,14 @@ Music recordings, converted audio, generated bundles, local test artifacts and g
 
 ## Server-synced volume (0.1.4)
 
-ServerSync is embedded in BardBox.dll, with its license included in the package. Install the same patch version on every client and server. The existing Audio.Volume key is retained and now server-controlled. Offline/hosting uses your own value; joining a server temporarily adopts its value. ListenerVolume, toggle controls, visuals and diagnostics remain local. The 20 m range, song files, synchronization timeline and buff values are unchanged. Extra gain is applied only to each BardBox emitter through an audio filter, with saturated PCM output; source clips and song hashes are not modified.
+ServerSync is embedded in BardBox.dll, with its license included in the package. Install the same patch version on every client and server. The existing Audio.Volume key is retained and now server-controlled. Offline/hosting uses your own value; joining a server temporarily adopts its value. ListenerVolume, toggle controls, visuals and diagnostics remain local. The song files, synchronization timeline and buff values are unchanged. Extra gain is applied only to each BardBox emitter through an audio filter, with saturated PCM output; source clips and song hashes are not modified.
+
+## Long-range audio (0.1.5)
+
+Audio.Range is server-synchronized and locked for non-admins, with a default of 500 metres and limits of 1-2000 metres. Audio is attenuated linearly between the near zone (3 metres, or half the radius for small radii) and the edge. Range uses three-dimensional distance between character audio positions. Buffs and shockwave visibility remain at 20 metres.
+
+The server relays small playback snapshots, using peer-owned character identity and server-known position. One-second heartbeats and a 3.5-second lease remove stale sources. Epoch and sequence checks reject old snapshots. Clients accept snapshots only from their server and create one local emitter per musician independently of loaded player objects. The same server clock and file hashes still control synchronization. No audio data or extra world objects are streamed.
+
+Debug.ShowAudioRange is local and off by default. Debug.ToggleAudioRangeKey is unbound by default and ignored when typing or unfocused. Three world-space circles outline the sound sphere, with a radius label. Camera visibility still limits how much of a very large sphere can be seen. No map markers or terrain reveal are added.
+
+Audio.MuteGameMusic is local and enabled by default. A PCM filter fades only the actual MusicMan source down over 0.5 seconds and back over 1 second; it never edits music preferences, native source volume or mute flags. Personal mute, missing/mismatched songs and leaving range release the attenuation. A new MusicMan source gets its own filter; old filters are released.

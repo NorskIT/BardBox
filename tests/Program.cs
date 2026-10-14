@@ -15,6 +15,22 @@ foreach(var gain in new[]{0f,.5f,1f,2f,5f,10f,-1f,float.NaN,float.PositiveInfini
 }
 var louder=new[]{.1f,-.1f};AudioGain.Apply(louder,5);
 Assert(louder[0]==.5f && louder[1]==-.5f,"500% amplifies PCM beyond AudioSource's 100% limit");
+Assert(RadioRules.Range(float.NaN)==500 && RadioRules.Range(float.PositiveInfinity)==500,"Invalid audio range fallback");
+Assert(RadioRules.Range(0)==1 && RadioRules.Range(2500)==2000,"Audio range bounds");
+foreach(float radius in new[]{1f,20f,500f,2000f})
+{
+    Assert(RadioRules.Attenuation(0,radius)==1,"Full near gain "+radius);
+    Assert(RadioRules.Attenuation(radius,radius)==0 && RadioRules.Attenuation(radius+1,radius)==0,"Hard range boundary "+radius);
+    Assert(RadioRules.Attenuation(radius*.75f,radius)>0 && RadioRules.Attenuation(radius*.75f,radius)<1,"Gradual distance attenuation "+radius);
+}
+Assert(RadioRules.Attenuation(float.NaN,500)==0,"Invalid position silenced");
+Assert(RadioRules.Fresh(10,7) && !RadioRules.Fresh(10,6.5) && !RadioRules.Fresh(10,12),"Lease timeout and future heartbeat");
+Assert(RadioRules.NewSequence(2,1) && !RadioRules.NewSequence(1,2) && !RadioRules.NewSequence(2,2),"Old and duplicate snapshots rejected");
+var session=Guid.NewGuid().ToString("N");var hash=new string('A',64);
+Assert(RadioRules.Valid("trailblazer",1,session,hash,5,10),"Valid radio announcement");
+Assert(!RadioRules.Valid("missing",1,session,hash,5,10) && !RadioRules.Valid("trailblazer",4,session,hash,5,10),"Invalid tape/quality rejected");
+Assert(!RadioRules.Valid("trailblazer",1,"bad",hash,5,10) && !RadioRules.Valid("trailblazer",1,session,new string('Z',64),5,10),"Malformed session/hash rejected");
+Assert(!RadioRules.Valid("trailblazer",1,session,hash,double.NaN,10) && !RadioRules.Valid("trailblazer",1,session,hash,12,10),"Invalid/future start rejected");
 var contributions=new Contributions();
 var input=new PlaybackInput();
 input.Update(true,false,false);Assert(input.Playing,"Hold starts music");

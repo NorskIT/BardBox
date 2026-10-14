@@ -18,13 +18,16 @@ namespace BardBox;
 [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod,VersionStrictness.Patch)]
 public sealed class Plugin : BaseUnityPlugin
 {
-    public const string Id="norskit_bardbox_plugin",Version="0.1.4";
+    public const string Id="norskit_bardbox_plugin",Version="0.1.5";
     internal static Plugin Instance=null!;
     internal string Folder="";
     internal ConfigEntry<float> Volume=null!;
     internal ConfigEntry<float> ListenerVolume=null!;
     internal ServerSync.ConfigSync Sync=null!;
-    private float serverVolume;
+    private float serverVolume,serverRange;
+    internal ConfigEntry<float> AudioRange=null!;
+    internal ConfigEntry<bool> MuteGameMusic=null!,ShowAudioRange=null!;
+    internal ConfigEntry<KeyboardShortcut> ToggleAudioRangeKey=null!;
     internal ConfigEntry<bool> ShockwavesEnabled=null!;
     internal ConfigEntry<bool> SyncDiagnostics=null!;
     internal ConfigEntry<bool> TogglePlayback=null!;
@@ -39,6 +42,15 @@ public sealed class Plugin : BaseUnityPlugin
         Volume=Config.Bind("Audio","Volume",0.5f,new ConfigDescription("Server music volume: 1 = 100%, 5 = 500%. High gain may distort loud recordings. [Synced with Server]",new AcceptableValueRange<float>(0,5)));
         Sync.AddConfigEntry(Volume).SynchronizedConfig=true;
         serverVolume=Volume.Value;Volume.SettingChanged+=VolumeChanged;
+        AudioRange=Config.Bind("Audio","Range",500f,new ConfigDescription("Music radius in metres. Buffs remain within 20 m. [Synced with Server]",new AcceptableValueRange<float>(1,2000)));
+        Sync.AddConfigEntry(AudioRange).SynchronizedConfig=true;
+        AudioRange.Value=RadioRules.Range(AudioRange.Value);serverRange=AudioRange.Value;AudioRange.SettingChanged+=RangeChanged;
+        MuteGameMusic=Config.Bind("Audio","MuteGameMusic",true,"Fade game music out while a boombox is audible. [Local]");
+        ShowAudioRange=Config.Bind("Debug","ShowAudioRange",false,"Show boombox sound radii in the world. [Local]");
+        ToggleAudioRangeKey=Config.Bind("Debug","ToggleAudioRangeKey",new KeyboardShortcut(KeyCode.None),"Optional shortcut to toggle audio range visualization. [Local]");
+        Sync.AddConfigEntry(MuteGameMusic).SynchronizedConfig=false;
+        Sync.AddConfigEntry(ShowAudioRange).SynchronizedConfig=false;
+        Sync.AddConfigEntry(ToggleAudioRangeKey).SynchronizedConfig=false;
         ListenerVolume=Config.Bind("Audio","ListenerVolume",1f,new ConfigDescription("Personal volume multiplier: 0 mutes, 1 uses the full server volume. Does not change buffs. [Local]",new AcceptableValueRange<float>(0,1)));
         Sync.AddConfigEntry(ListenerVolume).SynchronizedConfig=false;
         ShockwavesEnabled=Config.Bind("Visuals","ShockwavesEnabled",true,"Show local music shockwaves on strong bass/energy onsets.");
@@ -59,6 +71,13 @@ public sealed class Plugin : BaseUnityPlugin
         if(!Sync.IsSourceOfTruth && Sync.IsLocked && !ServerSync.ConfigSync.ProcessingServerUpdate)
         {if(Volume.Value!=serverVolume)Volume.Value=serverVolume;return;}
         serverVolume=Volume.Value;
+    }
+    private void RangeChanged(object sender,EventArgs args)
+    {
+        if(!Sync.IsSourceOfTruth && Sync.IsLocked && !ServerSync.ConfigSync.ProcessingServerUpdate)
+        {if(AudioRange.Value!=serverRange)AudioRange.Value=serverRange;return;}
+        float valid=RadioRules.Range(AudioRange.Value);serverRange=valid;
+        if(AudioRange.Value!=valid)AudioRange.Value=valid;
     }
     internal void Warn(string message)=>Logger.LogWarning(message);
     internal void Trace(string message){if(SyncDiagnostics.Value)Logger.LogInfo("Music sync: "+message);}
@@ -151,15 +170,23 @@ public sealed class Plugin : BaseUnityPlugin
     }
     private void Update()
     {
-        MusicClock.Tick();
+        MusicClock.Tick();RadioNetwork.Tick();
         if(!Ready)return;
         foreach(var player in Player.GetAllPlayers())
             if(player && !player.GetComponent<Musician>())player.gameObject.AddComponent<Musician>();
     }
+    private void LateUpdate()
+    {
+        if(!Ready)return;
+        RadioPlayback.Tick();MusicDucking.Tick(Time.unscaledDeltaTime);AudioRangeDebug.Tick();
+    }
+    private void OnGUI(){if(Ready)AudioRangeDebug.Draw();}
     private void OnDestroy()
     {
         Ready=false;PrefabManager.OnVanillaPrefabsAvailable-=Register;
         foreach(var musician in FindObjectsByType<Musician>(FindObjectsSortMode.None))Destroy(musician);
+        Volume.SettingChanged-=VolumeChanged;AudioRange.SettingChanged-=RangeChanged;
+        RadioPlayback.Clear();RadioNetwork.Reset();MusicDucking.Clear();AudioRangeDebug.Clear();
         harmony?.UnpatchSelf();AudioLibrary.Clear();MusicClock.Reset();
         if(bundle)bundle.Unload(false);
     }
