@@ -1,6 +1,6 @@
 # BardBox
 
-<img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/docs/images/bardbox.png" alt="A Viking raising a boombox" width="320">
+<img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/docs/images/boombox-in-game.png" alt="Playing the Boombox in Valheim" width="420">
 
 Bring music to your adventures! Craft a Boombox, equip a reusable tape like arrows, and give yourself and friends within **20 metres** a bonus. Run and jump while playing, with shockwaves that react to the music.
 
@@ -27,8 +27,6 @@ Tapes are reusable and upgradeable. Values below are for quality **I / II / III*
 | <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/needle_guard.png" alt="Needle Guard" width="48"> | Needle Guard | 5 / 10 / 15% less pierce attack damage received. |
 | <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/arcane_pulse.png" alt="Arcane Pulse" width="48"> | Arcane Pulse | +15 / 20 / 25% eitr regeneration. |
 | <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/war_drums.png" alt="War Drums" width="48"> | War Drums | +5 / 10 / 15% physical attack damage. |
-
-<img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/docs/images/boombox-in-game.png" alt="Playing the Boombox in Valheim" width="420">
 
 [Crafting and setup](DEVELOPMENT.md) ? [Songs](SONGS.md) ? [Credits](CREDITS.md)
 
