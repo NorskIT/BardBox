@@ -18,21 +18,21 @@ Bring music to your adventures! Craft a Boombox, find a reusable tape and equip 
 
 Tapes drop from bosses (33%) or appear in new dungeon/village chests (1%). They cannot be crafted, but are reusable and upgradeable. Existing chest loot is unchanged. Values below are for quality **I / II / III**. Different tapes combine; multiple copies of the same effect use the strongest quality.
 
-| Image | Name | Description | Found / crafted |
-|---|---|---|---|
-| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/boombox.png" alt="Boombox" width="48"> | Boombox | Play music and give nearby players the selected tape's bonus. | Workbench |
-| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/blank_tape.png" alt="Blank Tape" width="48"> | Blank Tape | Material for upgrading found tapes. | Workbench |
-| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/trailblazer.png" alt="Trailblazer" width="48"> | Trailblazer | +5 / 7.5 / 10% movement speed. | Eikthyr (33%) |
-| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/second_wind.png" alt="Second Wind" width="48"> | Second Wind | +15 / 20 / 25% stamina regeneration. | The Elder (33%) |
-| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/stonebeat.png" alt="Stonebeat" width="48"> | Stonebeat | 5 / 10 / 15% less blunt attack damage received. | Burial Chambers chests (1%) |
-| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/hauler.png" alt="Hauler" width="48"> | Hauler | +150 / 300 / 500 carry weight. | Bonemass (33%) |
-| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/heartbeat.png" alt="Heartbeat" width="48"> | Heartbeat | +15 / 25 / 35% natural health regeneration. | Sunken Crypts chests (1%) |
-| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/steady_rhythm.png" alt="Steady Rhythm" width="48"> | Steady Rhythm | 5 / 10 / 15% lower stamina costs for running, jumping, attacking, blocking, dodging, swimming and sneaking. | Moder (33%) |
-| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/iron_chorus.png" alt="Iron Chorus" width="48"> | Iron Chorus | 5 / 10 / 15% less slash attack damage received. | Frost Caves chests (1%) |
-| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/tailwind.png" alt="Tailwind" width="48"> | Tailwind | +10 / 15 / 20% sail force on the musician's boat. | Fuling village chests (1%) |
-| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/needle_guard.png" alt="Needle Guard" width="48"> | Needle Guard | 5 / 10 / 15% less pierce attack damage received. | Yagluth (33%) |
-| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/arcane_pulse.png" alt="Arcane Pulse" width="48"> | Arcane Pulse | +15 / 20 / 25% eitr regeneration. | The Queen (33%) |
-| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/war_drums.png" alt="War Drums" width="48"> | War Drums | +5 / 10 / 15% physical attack damage. | Fader (33%) |
+| Image | Name | Description | Found / crafted | Spawn command |
+|---|---|---|---|---|
+| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/boombox.png" alt="Boombox" width="48"> | Boombox | Play music and give nearby players the selected tape's bonus. | Workbench | `spawn NorskIT_BardBox_Boombox 1` |
+| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/blank_tape.png" alt="Blank Tape" width="48"> | Blank Tape | Material for upgrading found tapes. | Workbench | `spawn NorskIT_BardBox_BlankTape 1` |
+| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/trailblazer.png" alt="Trailblazer" width="48"> | Trailblazer | +5 / 7.5 / 10% movement speed. | Eikthyr (33%) | `spawn NorskIT_BardBox_trailblazer 1` |
+| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/second_wind.png" alt="Second Wind" width="48"> | Second Wind | +15 / 20 / 25% stamina regeneration. | The Elder (33%) | `spawn NorskIT_BardBox_second_wind 1` |
+| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/stonebeat.png" alt="Stonebeat" width="48"> | Stonebeat | 5 / 10 / 15% less blunt attack damage received. | Burial Chambers chests (1%) | `spawn NorskIT_BardBox_stonebeat 1` |
+| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/hauler.png" alt="Hauler" width="48"> | Hauler | +150 / 300 / 500 carry weight. | Bonemass (33%) | `spawn NorskIT_BardBox_hauler 1` |
+| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/heartbeat.png" alt="Heartbeat" width="48"> | Heartbeat | +15 / 25 / 35% natural health regeneration. | Sunken Crypts chests (1%) | `spawn NorskIT_BardBox_heartbeat 1` |
+| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/steady_rhythm.png" alt="Steady Rhythm" width="48"> | Steady Rhythm | 5 / 10 / 15% lower stamina costs for running, jumping, attacking, blocking, dodging, swimming and sneaking. | Moder (33%) | `spawn NorskIT_BardBox_steady_rhythm 1` |
+| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/iron_chorus.png" alt="Iron Chorus" width="48"> | Iron Chorus | 5 / 10 / 15% less slash attack damage received. | Frost Caves chests (1%) | `spawn NorskIT_BardBox_iron_chorus 1` |
+| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/tailwind.png" alt="Tailwind" width="48"> | Tailwind | +10 / 15 / 20% sail force on the musician's boat. | Fuling village chests (1%) | `spawn NorskIT_BardBox_tailwind 1` |
+| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/needle_guard.png" alt="Needle Guard" width="48"> | Needle Guard | 5 / 10 / 15% less pierce attack damage received. | Yagluth (33%) | `spawn NorskIT_BardBox_needle_guard 1` |
+| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/arcane_pulse.png" alt="Arcane Pulse" width="48"> | Arcane Pulse | +15 / 20 / 25% eitr regeneration. | The Queen (33%) | `spawn NorskIT_BardBox_arcane_pulse 1` |
+| <img src="https://raw.githubusercontent.com/NorskIT/BardBox/main/assets/icons/war_drums.png" alt="War Drums" width="48"> | War Drums | +5 / 10 / 15% physical attack damage. | Fader (33%) | `spawn NorskIT_BardBox_war_drums 1` |
 
 [Crafting and setup](DEVELOPMENT.md) ? [Songs](SONGS.md) ? [Credits](CREDITS.md)
 
