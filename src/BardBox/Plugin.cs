@@ -18,7 +18,7 @@ namespace BardBox;
 [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod,VersionStrictness.Patch)]
 public sealed class Plugin : BaseUnityPlugin
 {
-    public const string Id="norskit_bardbox_plugin",Version="0.1.5";
+    public const string Id="norskit_bardbox_plugin",Version="0.1.6";
     internal static Plugin Instance=null!;
     internal string Folder="";
     internal ConfigEntry<float> Volume=null!;
@@ -61,7 +61,7 @@ public sealed class Plugin : BaseUnityPlugin
         Sync.AddConfigEntry(SyncDiagnostics).SynchronizedConfig=false;
         harmony=new Harmony(Id);
         // ServerSync installs its own patches; only patch BardBox gameplay classes here.
-        foreach(var type in new[]{typeof(MusicControls),typeof(MusicSail),typeof(MusicTooltip)})harmony.CreateClassProcessor(type).Patch();
+        foreach(var type in new[]{typeof(MusicControls),typeof(MusicSail),typeof(MusicTooltip),typeof(BossTapeDrops),typeof(ChestTapeDrops)})harmony.CreateClassProcessor(type).Patch();
         PrefabManager.OnVanillaPrefabsAvailable+=Register;
     }
     private void VolumeChanged(object sender,EventArgs args)
@@ -95,7 +95,7 @@ public sealed class Plugin : BaseUnityPlugin
                 if(!bundle || !bundle.LoadAsset<GameObject>("BardBoxVisual"))throw new InvalidOperationException("BardBoxVisual is missing from the asset bundle.");
             }
             if(bundle)ShockwaveMaterial=bundle.LoadAsset<Material>("ShockwaveMaterial");
-            AddItem(Catalog.Blank,"Blank Tape","Record a biome tape at a workbench.","blank_tape",ItemDrop.ItemData.ItemType.Material,
+            AddItem(Catalog.Blank,"Blank Tape","Upgrade a found music tape at a workbench.","blank_tape",ItemDrop.ItemData.ItemType.Material,
                 new[]{new RequirementConfig("Thistle",2),new RequirementConfig("GreydwarfEye",2)},false,headless);
             AddItem(Catalog.Box,"Boombox","Equip a tape and use Attack to play. Nearby players receive its bonus.","boombox",ItemDrop.ItemData.ItemType.TwoHandedWeapon,
                 new[]{new RequirementConfig("FineWood",8),new RequirementConfig("Bronze",4),new RequirementConfig("SurtlingCore",2)},false,headless);
@@ -103,7 +103,6 @@ public sealed class Plugin : BaseUnityPlugin
             {
                 var cost=new List<RequirementConfig>{new RequirementConfig(Catalog.Blank,1,1)};
                 cost.AddRange(tape.Materials.Select(x=>new RequirementConfig(x.Item,x.Count,x.Count)));
-                if(tape.Trophy.Length>0)cost.Add(new RequirementConfig(tape.Trophy,1,0));
                 var item=AddItem(tape.Prefab,tape.Name,"Reusable music tape. Select like arrows; play with the Boombox.",tape.Id,ItemDrop.ItemData.ItemType.Ammo,cost.ToArray(),true,headless);
                 var effect=ScriptableObject.CreateInstance<MusicEffect>();effect.name=tape.Effect;
                 effect.Definition=tape;effect.m_ttl=2.5f;effect.SetLevel(1,0);
@@ -118,6 +117,7 @@ public sealed class Plugin : BaseUnityPlugin
     private CustomItem AddItem(string id,string name,string description,string icon,ItemDrop.ItemData.ItemType type,RequirementConfig[] cost,bool upgrade,bool headless)
     {
         var item=new CustomItem(id,"TankardAnniversary",new ItemConfig {Name=name,Description=description,CraftingStation="piece_workbench",MinStationLevel=1,Requirements=cost});
+        if(upgrade)item.Recipe.Recipe.m_noCraftOnlyUpgrade=true;
         var shared=item.ItemDrop.m_itemData.m_shared;
         shared.m_itemType=type;shared.m_maxQuality=upgrade?3:1;shared.m_maxStackSize=id==Catalog.Blank?50:1;
         shared.m_weight=id==Catalog.Box?4:id==Catalog.Blank?0.1f:0.2f;

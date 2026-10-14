@@ -1,4 +1,4 @@
-# BardBox 0.1.5 — development build
+# BardBox 0.1.6 — development build
 
 Craft a Boombox, select a reusable tape like ammunition, and hold Attack to play.
 Release to stop; each new press starts the sound from the beginning. Set
@@ -27,27 +27,32 @@ This project does not install itself, publish releases, or update a server.
 
 ## Crafting
 
-All recipes use a level 1 Workbench. Tape upgrades use levels 2 and 3.
+Boombox and Blank Tape use a level 1 Workbench. Tapes are loot-only; upgrades use levels 2 and 3.
 Boombox: 8 Fine Wood, 4 Bronze, 2 Surtling Cores.
-Blank Tape: 2 Thistle, 2 Greydwarf Eyes. Each finished tape uses one Blank Tape.
-Each recipe below also needs **1 Blank Tape**. Bonuses are quality I / II / III.
+Blank Tape: 2 Thistle, 2 Greydwarf Eyes.
+Each quality-II upgrade needs **1 Blank Tape** plus the materials below; quality III costs twice those amounts. Bonuses are quality I / II / III.
 
-| Tape | Materials | Boss trophy | Bonus |
+| Tape | Upgrade materials | Found at | Bonus |
 |---|---|---|---|
-| Trailblazer | 5 Wood, 5 Resin, 2 Deer Hide | Eikthyr | +5 / 7.5 / 10% land speed |
-| Second Wind | 2 Copper, 5 Greydwarf Eyes | Elder | +15 / 20 / 25% stamina regeneration |
-| Stonebeat | 5 Bone Fragments, 5 Stone | Elder | -5 / 10 / 15% blunt attack damage received |
-| Hauler | 2 Iron, 5 Ancient Bark | Bonemass | +150 / 300 / 500 carry weight |
-| Heartbeat | 2 Iron, 5 Bloodbags | Bonemass | +15 / 25 / 35% natural health regeneration |
-| Steady Rhythm | 2 Silver, 4 Wolf Fangs | Moder | -5 / 10 / 15% stamina costs |
-| Iron Chorus | 2 Silver, 4 Wolf Pelts | Moder | -5 / 10 / 15% slash attack damage received |
-| Tailwind | 2 Black Metal, 5 Linen Thread, 2 Needles | None | +10 / 15 / 20% sail force |
-| Needle Guard | 2 Black Metal, 5 Needles | Yagluth | -5 / 10 / 15% pierce attack damage received |
-| Arcane Pulse | 2 Refined Eitr, 5 Royal Jelly | Queen | +15 / 20 / 25% eitr regeneration |
-| War Drums | 2 Flametal, 5 Asksvin Hide | Fader | +5 / 10 / 15% physical attack damage |
+| Trailblazer | 5 Wood, 5 Resin, 2 Deer Hide | Eikthyr (33%) | +5 / 7.5 / 10% land speed |
+| Second Wind | 2 Copper, 5 Greydwarf Eyes | The Elder (33%) | +15 / 20 / 25% stamina regeneration |
+| Stonebeat | 5 Bone Fragments, 5 Stone | Burial Chambers chests (1%) | -5 / 10 / 15% blunt attack damage received |
+| Hauler | 2 Iron, 5 Ancient Bark | Bonemass (33%) | +150 / 300 / 500 carry weight |
+| Heartbeat | 2 Iron, 5 Bloodbags | Sunken Crypts chests (1%) | +15 / 25 / 35% natural health regeneration |
+| Steady Rhythm | 2 Silver, 4 Wolf Fangs | Moder (33%) | -5 / 10 / 15% stamina costs |
+| Iron Chorus | 2 Silver, 4 Wolf Pelts | Frost Caves chests (1%) | -5 / 10 / 15% slash attack damage received |
+| Tailwind | 2 Black Metal, 5 Linen Thread, 2 Needles | Fuling village chests (1%) | +10 / 15 / 20% sail force |
+| Needle Guard | 2 Black Metal, 5 Needles | Yagluth (33%) | -5 / 10 / 15% pierce attack damage received |
+| Arcane Pulse | 2 Refined Eitr, 5 Royal Jelly | The Queen (33%) | +15 / 20 / 25% eitr regeneration |
+| War Drums | 2 Flametal, 5 Asksvin Hide | Fader (33%) | +5 / 10 / 15% physical attack damage |
 
-Quality 2 costs another Blank Tape and the original non-trophy materials;
-quality 3 costs twice those amounts. Boss trophies are only consumed for initial crafting.
+Boss trophies are not required. Each boss death rolls independently for one tape total, not one per player.
+Chest rolls happen only when native contents are first generated, not when opened.
+The eligible prefabs are TreasureChest_forestcrypt, TreasureChest_sunkencrypt, TreasureChest_mountaincave and TreasureChest_heath.
+Other chests, including Hildir and player-built chests, are excluded. Existing generated chests are not backfilled.
+A successful chest roll adds one quality-I tape without replacing native loot; a full chest skips the addition and logs a warning.
+An owner-written ZDO marker prevents retries, including on failed rolls or ownership transfer.
+Drop rates are fixed in 0.1.6. Existing tapes, their IDs, songs and bonuses are unchanged.
 
 ## Songs
 

@@ -3,7 +3,7 @@
 ## Completed without launching the game
 
 - Release compilation against installed Valheim DLLs succeeds.
-- The current test run passes 242 assertions, including installed-game Harmony method
+- The current test run passes 258 assertions, including installed-game Harmony method
   signatures, all shipped WAV files and all PNG dimensions/color types.
 - Core tests exercise strongest source, weaker-source fallback, stacking of different
   tapes, source expiry, invalid identifiers/quality and death/logout clearing.
@@ -229,3 +229,37 @@ A second two-process run also passed with roles reversed: a remote client
 published its music through the server, the host received sound and the nearby
 buff, and the client's release stopped the host emitter. Evidence:
 artifacts/smoke-20261015-000212 and smoke-20261015-000213.
+
+
+## 0.1.6 tape loot
+
+The core suite passes 258 assertions, including exact chance boundaries and the
+four allowed chest prefab names. Native recipe checks assert that all eleven
+tapes use m_noCraftOnlyUpgrade, have no trophy requirement, and retain quality-II
+and quality-III material amounts and workbench levels. Boombox and Blank Tape
+retain ordinary crafting. No Ranged 1.2.3 compatibility remains covered.
+
+Isolated world loot checks passed in artifacts/smoke-20261015-001713:
+- All seven installed boss prefabs resolve; their native CharacterDrop generator
+  produces both wins and losses with fixed test seeds. Registration adds exactly
+  one entry, preserves vanilla entries and disables player/level/resource scaling.
+- All four installed chest prefabs generate their ordinary contents plus exactly
+  one quality-I tape when the separate tape roll is forced to succeed.
+- Failed rolls, already-generated vanilla chests, creator-tagged chests and
+  excluded prefab types do not award or retry tape rolls.
+- Inventory persisted into the native ZDO loads with the same tape.
+- Non-owners cannot roll; changing ownership and retrying does not duplicate loot.
+- A full inventory keeps all its contents and records the attempt without rerolling.
+
+Boss tests use the game's loot generator rather than fighting all seven bosses.
+Chest tests instantiate actual chest prefabs in a disposable world rather than
+manually exploring every dungeon. These controlled tests do not measure random
+loot frequency during a normal campaign or compatibility with other loot mods.
+
+The complete isolated world regression passed, including No Ranged 1.2.3,
+playback/movement and range/music-presentation checks. The two-process run in
+artifacts/smoke-20261015-001714 and smoke-20261015-001716 passed the existing
+network/audio tests and the new loot checks: native boss item spawn and chest
+inventory resolve to the same ZDO IDs on both peers; the receiving client gets
+one level-I tape; transfer of chest ownership does not trigger another roll.
+No exception/error entries were found in these three final game logs.

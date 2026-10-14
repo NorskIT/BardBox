@@ -272,5 +272,6 @@ public sealed class NetworkSmoke : BaseUnityPlugin
             while(reverse.isPlaying){Check(Time.realtimeSinceStartup<deadline,"Client stop did not relay");yield return new WaitForSecondsRealtime(.1f);}
             File.WriteAllText(Path.Combine(folder,"reverse-relay-result.txt"),"PASS: remote client publishes, host receives audio/buff, remote release stops host emitter.");
         }
+        var loot=LootSmoke.Network(host,coord,folder);while(loot.MoveNext())yield return loot.Current;
     }
 }

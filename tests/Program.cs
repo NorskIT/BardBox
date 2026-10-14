@@ -174,4 +174,9 @@ using(var pe=new System.Reflection.PortableExecutable.PEReader(stream))
     Assert(Method("Player","SetControls",12),"Installed game control Harmony target");
     Assert(Method("Ship","GetSailForce",2),"Installed game sail Harmony target");
 }
+foreach(var pair in new[]{("TreasureChest_forestcrypt","stonebeat"),("TreasureChest_sunkencrypt","heartbeat"),("TreasureChest_mountaincave","iron_chorus"),("TreasureChest_heath","tailwind")})Assert(LootRules.ChestTape(pair.Item1)==pair.Item2,"Chest mapping "+pair.Item1);
+foreach(var excluded in new[]{"piece_chest_wood","TreasureChest_blackforest","TreasureChest_swamp","TreasureChest_mountains","TreasureChest_forestcrypt_hildir","TreasureChest_heath_hildir","TreasureChest_mountaincave_hildir","Player_tombstone",""})Assert(LootRules.ChestTape(excluded)==null,"Exclude chest "+excluded);
+Assert(LootRules.Wins(0,.01f) && LootRules.Wins(.009999f,.01f) && !LootRules.Wins(.01f,.01f),"Exact 1% boundary");
+Assert(LootRules.Wins(.32999f,.33f) && !LootRules.Wins(.33f,.33f),"Exact 33% boundary");
+Assert(!LootRules.Wins(float.NaN,.01f) && !LootRules.Wins(-1,.01f),"Invalid roll rejected");
 Console.WriteLine($"PASS: {count} assertions");

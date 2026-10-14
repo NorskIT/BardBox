@@ -116,6 +116,9 @@ public sealed class Smoke : BaseUnityPlugin
         float deadline=Time.realtimeSinceStartup+180;
         while(!Player.m_localPlayer || Player.m_localPlayer.InCutscene())
         {Check(Time.realtimeSinceStartup<deadline,"Timed out spawning test player");yield return new WaitForSecondsRealtime(1);}
+        yield return new WaitForSecondsRealtime(2);
+        while(Player.m_localPlayer.InCutscene()){Check(Time.realtimeSinceStartup<deadline,"Spawn cutscene timeout");yield return new WaitForSecondsRealtime(.2f);}
+        LootSmoke.Dump(folder);LootSmoke.RunWorld(folder);
         var player=Player.m_localPlayer;player.SetGodMode(true);
         player.GetComponent<PlayerController>().enabled=false; // Harness supplies the complete input stream.
         Equip(player,"ArmorLeatherChest");Equip(player,"CapeDeerHide");
@@ -440,6 +443,7 @@ public sealed class Smoke : BaseUnityPlugin
         const string prefix="NorskIT_BardBox_";
         Check((bool)AccessTools.Field(typeof(BardBox.Plugin),"Ready").GetValue(null),"Plugin did not finish registration");
         var names=new[]{"trailblazer","second_wind","stonebeat","hauler","heartbeat","steady_rhythm","iron_chorus","tailwind","needle_guard","arcane_pulse","war_drums"};
+        LootSmoke.Dump(folder);
         var db=ObjectDB.instance;
         Check(db!=null,"ObjectDB missing");
         // Jotunn only registers recipes/effects on world startup, not in the menu.
@@ -454,7 +458,11 @@ public sealed class Smoke : BaseUnityPlugin
             var recipe=db!.GetRecipe(data);Check(recipe!=null,"Missing recipe "+id);
             Check(recipe!.m_craftingStation!=null,"Missing station "+id);
             foreach(var req in recipe.m_resources)Check(req.m_resItem!=null,"Unresolved recipe material for "+id);
-            if(id=="Boombox" || id=="BlankTape")continue;
+            if(id=="Boombox" || id=="BlankTape"){Check(!recipe.m_noCraftOnlyUpgrade,"Base crafting disabled");continue;}
+            Check(recipe.m_noCraftOnlyUpgrade,"Tape craft not disabled: "+id);
+            Check(!recipe.m_resources.Any(r=>r.m_resItem.name.StartsWith("Trophy")),"Trophy still required");
+            Check(recipe.GetRequiredStationLevel(2)==2 && recipe.GetRequiredStationLevel(3)==3,"Upgrade stations changed");
+            foreach(var req in recipe.m_resources)Check(req.GetAmount(2)==req.m_amountPerLevel && req.GetAmount(3)==2*req.m_amountPerLevel,"Upgrade cost changed");
             Check(data.m_shared.m_itemType==ItemDrop.ItemData.ItemType.Ammo,"Incorrect tape type");
             Check(data.m_shared.m_maxQuality==3 && data.m_shared.m_maxStackSize==1,"Incorrect quality/stack");
             for(int level=1;level<=3;level++)
@@ -476,7 +484,7 @@ public sealed class Smoke : BaseUnityPlugin
             Check(ItemDrop.ItemData.GetTooltip(copy,3,false,0).Contains("Song: "),"Song metadata missing: "+id);
             Check(ItemDrop.ItemData.GetTooltip(copy,3,false,0).Contains("Quality 3/3"),"Tooltip patch did not apply: "+id);
         }
-        Check(Harmony.GetAllPatchedMethods().Count(m=>Harmony.GetPatchInfo(m).Owners.Contains(BardBox.Plugin.Id))==3,"Expected three scoped Harmony hooks");
+        Check(Harmony.GetAllPatchedMethods().Count(m=>Harmony.GetPatchInfo(m).Owners.Contains(BardBox.Plugin.Id))==5,"Expected five scoped Harmony hooks");
         var library=typeof(BardBox.Plugin).Assembly.GetType("BardBox.AudioLibrary")!;
         foreach(var id in names)
         {

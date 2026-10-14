@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.6
+
+- Replace tape crafting with 33% boss drops and 1% loot chances in four specific dungeon/village chest types.
+- Keep tapes reusable and upgradeable at the workbench; no boss trophy required for upgrades.
+- Award at most one level-I tape per roll, without player-count or resource scaling.
+- Preserve existing tapes and already-generated chest contents; no rerolls on opening, reload or ownership transfer.
+
 ## 0.1.5
 
 - Add server-synced sound radius: default 500 m, adjustable from 1 to 2000 m; buffs stay at 20 m.
