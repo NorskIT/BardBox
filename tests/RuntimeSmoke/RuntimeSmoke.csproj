@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework><LangVersion>latest</LangVersion><Nullable>enable</Nullable>
+    <AssemblyName>BardBox.RuntimeSmoke</AssemblyName>
+    <Managed>C:\Program Files (x86)\Steam\steamapps\common\Valheim\valheim_Data\Managed</Managed>
+    <Bep>$(APPDATA)\com.kesomannen.gale\valheim\profiles\Prod-v1\BepInEx</Bep>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/BardBox/BardBox.csproj"/>
+    <Reference Include="$(Managed)\assembly_valheim.dll;$(Managed)\assembly_utils.dll;$(Managed)\UnityEngine*.dll"><Private>false</Private></Reference>
+    <Reference Include="BepInEx"><HintPath>$(Bep)\core\BepInEx.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="0Harmony"><HintPath>$(Bep)\core\0Harmony.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Jotunn"><HintPath>$(Bep)\plugins\ValheimModding-Jotunn\Jotunn.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

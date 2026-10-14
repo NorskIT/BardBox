@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType><Nullable>enable</Nullable></PropertyGroup>
+  <ItemGroup><Compile Include="../src/BardBox/SongCatalog.cs" Link="SongCatalog.cs"/><Compile Include="../src/BardBox/ClockEstimator.cs" Link="ClockEstimator.cs"/><Compile Include="../src/BardBox/MusicOnsets.cs" Link="MusicOnsets.cs"/><Compile Include="../src/BardBox/Catalog.cs" Link="Catalog.cs"/><Compile Include="../src/BardBox/WaveReader.cs" Link="WaveReader.cs"/><Compile Include="../src/BardBox/PlaybackRules.cs" Link="PlaybackRules.cs"/></ItemGroup>
+  <ItemGroup><Compile Remove="RuntimeSmoke/**/*.cs"/></ItemGroup>
+  <ItemGroup><Compile Include="../src/BardBox/PlaybackInput.cs" Link="PlaybackInput.cs"/></ItemGroup>
+  <ItemGroup><EmbeddedResource Include="../assets/songs.tsv" LogicalName="BardBox.Songs.tsv"/></ItemGroup>
+</Project>

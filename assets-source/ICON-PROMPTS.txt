@@ -1,0 +1,22 @@
+Tool: OpenAI built-in image_gen.imagegen. transparent_background=true.
+One independent generation call per asset. Final icons resized to 128x128 RGBA PNG;
+originals retained under assets-source/generated-icons. No external artwork copied.
+
+BOOMBOX PROMPT:
+Create ONE square inventory icon for a Valheim boombox mod: a dark charcoal low-poly 1980s boombox with two large round speakers, a top handle and warm bronze trims. Stylized hand-painted game item render, 3/4 view, strong simple readable silhouette at 128x128 pixels, centered entire object with 8 percent transparent margins. Truly transparent background. No text, no letters, no logos, no scene, no border. This is a game inventory icon, not a photo.
+
+TAPE PROMPT TEMPLATE (replace DESCRIPTION with the entry below):
+Create ONE square game inventory icon: a charcoal cassette audio tape with DESCRIPTION. Stylized hand-painted low-poly game item render suitable for Valheim. Front view with very slight 3/4 depth, two visible tape reels, bold simple emblem on top label, warm bronze accents. Center the entire object with 8 percent transparent margins. Readable at 128x128 pixels. Truly transparent background, no text, letters, numbers, logos, scene or border. Match a consistent set of cassette item icons.
+
+blank_tape: ivory blank label without emblem
+trailblazer: green label with a large winged boot emblem
+second_wind: teal label with a swirling breath emblem
+stonebeat: slate blue label with a stone shield and hammer emblem
+hauler: ochre label with a bulging pack emblem
+heartbeat: red label with a heart emblem
+steady_rhythm: yellow label with a lightning bolt emblem
+iron_chorus: silver blue label with a shield and sword emblem
+tailwind: ocean blue label with a sailing boat emblem
+needle_guard: orange label with a shield and arrow emblem
+arcane_pulse: purple label with a luminous rune crystal emblem
+war_drums: dark red label with crossed axes emblem

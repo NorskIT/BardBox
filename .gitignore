@@ -1,0 +1,27 @@
+**/bin/
+**/obj/
+unity/Library/
+unity/Logs/
+unity/Temp/
+unity/UserSettings/
+build/*.log
+artifacts/
+
+# Local recordings and generated music imports (distribution not cleared)
+*.mp3
+*.wav
+*.ogg
+*.flac
+*.m4a
+unity/Assets/AudioSource/
+# Generated Unity assets and local build output
+unity/Assets/Generated/
+assets/bundle/
+*.dll
+*.pdb
+# Local credentials / editor state
+.env
+.env.*
+*.user
+.vs/
+build/unity-release.json
