@@ -179,3 +179,15 @@ Across 150 samples each, maximum host timeline error was 26.023 ms, client error
 receiver catch-up and replicated stop also passed. Measurements use native audio
 playback positions against the synchronized clock, not recordings from physical
 speakers. Listening/drop comparisons and Steam/PlayFab internet testing remain.
+
+## 0.1.4: 500% volume and ServerSync
+
+- Core suite: 221 assertions, including PCM gain, saturation, mute, bounds and invalid gain fallback.
+- ServerSync v1.20 source revision c57c2aa is embedded, with its license in the ZIP. Vendor synchronization logic is unchanged.
+- Initial integration exposed that a direct ConfigEntry assignment can bypass the ServerSync UI lock locally. BardBox now restores the last server value for locked clients; the regression passes.
+- Two isolated Valheim processes, native localhost networking: smoke-20261014-231720 (host) and smoke-20261014-231722 (client), both PASS. The client starts at 20%, receives server 500%, cannot override that value, then receives a live change to 300%. Emitter PCM gain and personal mute/unmute were verified.
+- Both peers retained synchronized playback over 150 samples each: maximum individual timeline error 40.33 ms (host), 23.62 ms (client). This does not measure physical speaker latency or Internet conditions.
+- Live audio audit in smoke-20261014-231842: 48 real audio buffers processed at 5x gain with zero sample errors. AudioSource.volume remains at Unity's maximum of 1; the filter supplies the extra gain.
+- No Ranged 1.2.3 compatibility in the same isolated process: all eleven tapes equip/select, retain enabled recipes and pass the crafting gate; bow/arrow recipes and equipment remain blocked.
+- Production profiles and servers were not modified.
+- The full world regression in smoke-20261014-231842 also passed: movement/jumping, overhead pose, hold/toggle controls, music/buffs, shockwaves, drift correction, tape changes, stop, teleport, death and respawn.

@@ -27,6 +27,7 @@ internal sealed class Musician : MonoBehaviour
     private readonly CueClock cueClock=new CueClock();
     private readonly Shockwave shockwave=new Shockwave();
     private AudioSource? source;
+    private MusicAmplifier? amplifier;
     private GameObject? emitter;
     private readonly Contributions contributions=new Contributions();
     internal Tape? ActiveTape {get;private set;}
@@ -116,17 +117,19 @@ internal sealed class Musician : MonoBehaviour
         var local=Player.m_localPlayer;
         var distance=local?Vector3.Distance(player.transform.position,local.transform.position):float.PositiveInfinity;
         var clip=ActiveTape!=null?AudioLibrary.Get(ActiveTape.Id):null;
-        if(!mediaMatches || !clip || distance>=20 || Plugin.Instance.Volume.Value<=0)
+        if(!mediaMatches || !clip || distance>=20 || Plugin.Instance.Volume.Value<=0 || Plugin.Instance.ListenerVolume.Value<=0)
         {if(source)source.Stop();audioId="";return;}
         if(!source)
         {
             emitter=new GameObject("BardBox audio");source=emitter.AddComponent<AudioSource>();
+            amplifier=emitter.AddComponent<MusicAmplifier>();
             source.playOnAwake=false;source.loop=true;source.spatialBlend=1;source.dopplerLevel=0;
             source.minDistance=3;source.maxDistance=20;source.rolloffMode=AudioRolloffMode.Linear;
             source.outputAudioMixerGroup=Resources.FindObjectsOfTypeAll<AudioMixerGroup>().FirstOrDefault(g=>g.name=="SFX");
         }
         emitter!.transform.position=player.transform.position+Vector3.up*2;
-        source!.volume=Plugin.Instance.Volume.Value;
+        source!.volume=Mathf.Min(1,Plugin.Instance.Volume.Value)*Plugin.Instance.ListenerVolume.Value;
+        amplifier!.Gain=Mathf.Max(1,Plugin.Instance.Volume.Value);
         if(audioId!=ActiveTape!.Id || audioStart!=started || !source.isPlaying)
         {
             source.Stop();source.clip=clip;audioId=ActiveTape.Id;audioStart=started;

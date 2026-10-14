@@ -1,4 +1,4 @@
-# BardBox 0.1.3 — development build
+# BardBox 0.1.4 — development build
 
 Craft a Boombox, select a reusable tape like ammunition, and hold Attack to play.
 Release to stop; each new press starts the sound from the beginning. Set
@@ -52,8 +52,7 @@ quality 3 costs twice those amounts. Boss trophies are only consumed for initial
 ## Songs
 
 See [SONGS.md](SONGS.md). All eleven tapes use supplied songs. The converted WAV files are in `assets/audio/`.
-The local volume control is `[Audio] Volume` in `norskit_bardbox_plugin.cfg` (0–1,
-default 0.5). Muting does not remove buffs.
+The server-controlled volume is `[Audio] Volume` in `norskit_bardbox_plugin.cfg` (0-5, default 0.5). ServerSync distributes the host/server value and locks it for non-admin clients. `1` is 100%, `5` is 500%. `[Audio] ListenerVolume` is a local multiplier (0-1, default 1); zero mutes without removing buffs. Changing volume applies during playback without restarting the song. High gain may distort loud recordings.
 
 ## Build
 
@@ -136,3 +135,7 @@ for multiplayer diagnosis; it is off by default.
 ## Source checkout
 
 Music recordings, converted audio, generated bundles, local test artifacts and game libraries are excluded from Git. Supply your own appropriately licensed recordings using `assets/songs.tsv` before building the audio assets. The source checkout alone is not a playable mod package.
+
+## Server-synced volume (0.1.4)
+
+ServerSync is embedded in BardBox.dll, with its license included in the package. Install the same patch version on every client and server. The existing Audio.Volume key is retained and now server-controlled. Offline/hosting uses your own value; joining a server temporarily adopts its value. ListenerVolume, toggle controls, visuals and diagnostics remain local. The 20 m range, song files, synchronization timeline and buff values are unchanged. Extra gain is applied only to each BardBox emitter through an audio filter, with saturated PCM output; source clips and song hashes are not modified.

@@ -6,7 +6,7 @@ $zip=[IO.Compression.ZipFile]::OpenRead([IO.Path]::GetFullPath($Archive))
 try {
     $entries=@{}
     foreach($entry in $zip.Entries){$entries[$entry.FullName.Replace('\','/')]=$entry}
-    foreach($name in @('manifest.json','icon.png','README.md','SONGS.md','CREDITS.md','CHANGELOG.md','SHA256SUMS.txt','BepInEx/plugins/BardBox/BardBox.dll','BepInEx/plugins/BardBox/bardbox.assets')){
+    foreach($name in @('ServerSync-LICENSE.txt','manifest.json','icon.png','README.md','SONGS.md','CREDITS.md','CHANGELOG.md','SHA256SUMS.txt','BepInEx/plugins/BardBox/BardBox.dll','BepInEx/plugins/BardBox/bardbox.assets')){
         if(-not $entries.ContainsKey($name)){throw "Missing $name"}
     }
     $reader=New-Object IO.StreamReader($entries['manifest.json'].Open())

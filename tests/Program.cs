@@ -5,6 +5,16 @@ using BardBox;
 
 int count=0;
 void Assert(bool value,string message){if(!value)throw new Exception(message);count++;}
+foreach(var gain in new[]{0f,.5f,1f,2f,5f,10f,-1f,float.NaN,float.PositiveInfinity})
+{
+    var samples=new[]{-.1f,0f,.1f,.8f,-.8f};
+    var expectedGain=float.IsNaN(gain)||float.IsInfinity(gain)?1:Math.Clamp(gain,0,5);
+    var expected=samples.Select(x=>Math.Clamp(x*expectedGain,-1,1)).ToArray();
+    AudioGain.Apply(samples,gain);
+    Assert(samples.SequenceEqual(expected),"PCM gain, mute, saturation and bounds: "+gain);
+}
+var louder=new[]{.1f,-.1f};AudioGain.Apply(louder,5);
+Assert(louder[0]==.5f && louder[1]==-.5f,"500% amplifies PCM beyond AudioSource's 100% limit");
 var contributions=new Contributions();
 var input=new PlaybackInput();
 input.Update(true,false,false);Assert(input.Playing,"Hold starts music");

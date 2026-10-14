@@ -89,6 +89,21 @@ public sealed class Smoke : BaseUnityPlugin
         var prefab=PrefabManager.Instance.GetPrefab(name);var item=prefab.GetComponent<ItemDrop>().m_itemData.Clone();item.m_dropPrefab=prefab;
         player.GetInventory().GetAllItems().Add(item);Check(player.EquipItem(item,false),"Equip "+name);return item;
     }
+    private struct GainSample { public int Index; public float Expected; public bool Valid; }
+    private static int gainBlocks,gainErrors;
+    private static void BeforeGain(object __instance,float[] data,out GainSample __state)
+    {
+        __state=default;
+        if((float)AccessTools.Field(__instance.GetType(),"Gain").GetValue(__instance)!=5)return;
+        for(int i=0;i<data.Length;i++)if(Math.Abs(data[i])>.0001f && Math.Abs(data[i])<.19f)
+        {__state=new GainSample{Index=i,Expected=data[i]*5,Valid=true};return;}
+    }
+    private static void AfterGain(float[] data,GainSample __state)
+    {
+        if(!__state.Valid)return;
+        System.Threading.Interlocked.Increment(ref gainBlocks);
+        if(Math.Abs(data[__state.Index]-__state.Expected)>.00001f)System.Threading.Interlocked.Increment(ref gainErrors);
+    }
     private IEnumerator WorldCases()
     {
         new Harmony("norskit_bardbox_test_focus").Patch(AccessTools.PropertyGetter(typeof(Application),"isFocused"),prefix:new HarmonyMethod(typeof(Smoke),nameof(Focused)));
@@ -125,6 +140,17 @@ public sealed class Smoke : BaseUnityPlugin
         Check(player.GetSEMan().HaveStatusEffect("NorskIT_BardBox_SE_trailblazer".GetStableHashCode()),"World music buff missing");
         var audio=(AudioSource)AccessTools.Field(musician.GetType(),"source").GetValue(musician);
         Check(audio && audio.isPlaying,"World audio not playing");
+        var gainType=typeof(BardBox.Plugin).Assembly.GetType("BardBox.MusicAmplifier");
+        var gainAudit=new Harmony("norskit_bardbox_gain_audit");
+        gainAudit.Patch(AccessTools.Method(gainType,"OnAudioFilterRead"),prefix:new HarmonyMethod(typeof(Smoke),nameof(BeforeGain)),postfix:new HarmonyMethod(typeof(Smoke),nameof(AfterGain)));
+        var gainConfig=(BepInEx.Configuration.ConfigEntry<float>)AccessTools.Field(typeof(BardBox.Plugin),"Volume").GetValue(AccessTools.Field(typeof(BardBox.Plugin),"Instance").GetValue(null));
+        float savedGain=gainConfig.Value;gainConfig.Value=5;
+        yield return new WaitForSecondsRealtime(1);
+        gainAudit.UnpatchSelf();
+        Check(gainBlocks>0 && gainErrors==0,"Live audio callback did not apply 5x PCM gain: blocks="+gainBlocks+" errors="+gainErrors);
+        Check(audio.volume==1,"AudioSource must use its native 100% maximum");
+        gainConfig.Value=savedGain;
+        File.WriteAllText(Path.Combine(folder,"audio-gain-result.txt"),"PASS: "+gainBlocks+" real audio buffers amplified 5x, zero sample errors; AudioSource stays at 1.");
         Check((float)AccessTools.Field(pose.GetType(),"weight").GetValue(pose)>.95f,"World pose never reached full weight");
         AccessTools.Method(pose.GetType(),"LateUpdate").Invoke(pose,null);
         Check(player.GetVisEquipment().m_leftHand.position.y>player.transform.position.y+1.8f,"World left grip not overhead");

@@ -35,6 +35,7 @@ try {
     $icon.Save((Join-Path $stage 'icon.png'),[Drawing.Imaging.ImageFormat]::Png)
 } finally { $graphics.Dispose();$icon.Dispose();$source.Dispose() }
 Copy-Item -LiteralPath (Join-Path $project 'CHANGELOG.md') -Destination $stage
+Copy-Item -LiteralPath (Join-Path $project 'src/BardBox/ThirdParty/ServerSync/LICENSE.txt') -Destination (Join-Path $stage 'ServerSync-LICENSE.txt')
 $hashes=Get-ChildItem -LiteralPath $stage -Recurse -File | Get-FileHash -Algorithm SHA256
 $hashes | ForEach-Object { $_.Hash+'  '+$_.Path.Substring($stage.Length+1) } | Set-Content (Join-Path $stage 'SHA256SUMS.txt')
 Compress-Archive -Path (Join-Path $stage '*') -DestinationPath ($stage+'.zip')

@@ -48,3 +48,7 @@ are reused. Bardheim's all-rights-reserved license is respected.
 ## Mod artwork and screenshot
 
 The BardBox cover illustration and in-game screenshot in `docs/images/` were supplied by the project owner for the mod listing and README. The cover creator was not separately identified.
+
+## ServerSync
+
+Embedded ServerSync by Tykea / blaxxun-boop, upstream v1.20 revision `c57c2aa`. Source: https://github.com/blaxxun-boop/ServerSync/blob/c57c2aa/ConfigSync.cs. Only build-time JetBrains annotations were removed; synchronization logic is unchanged. See `ServerSync-LICENSE.txt` in the package or `src/BardBox/ThirdParty/ServerSync/LICENSE.txt` in this repository.

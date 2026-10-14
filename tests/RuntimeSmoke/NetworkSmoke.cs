@@ -65,6 +65,11 @@ public sealed class NetworkSmoke : BaseUnityPlugin
     private IEnumerator Run()
     {
         bool host=role=="host";
+        var plugin=AccessTools.Field(typeof(BardBox.Plugin),"Instance").GetValue(null);
+        var serverVolume=(BepInEx.Configuration.ConfigEntry<float>)AccessTools.Field(typeof(BardBox.Plugin),"Volume").GetValue(plugin);
+        var personalVolume=(BepInEx.Configuration.ConfigEntry<float>)AccessTools.Field(typeof(BardBox.Plugin),"ListenerVolume").GetValue(plugin);
+        var sync=(ServerSync.ConfigSync)AccessTools.Field(typeof(BardBox.Plugin),"Sync").GetValue(plugin);
+        serverVolume.Value=host?5:.2f;personalVolume.Value=1;
         var profile=new PlayerProfile("bardbox_network_"+role,FileHelpers.FileSource.Local);
         profile.SetName("BardBox "+role);profile.m_firstSpawn=false;profile.Save();Game.SetProfile(profile.GetFilename(),profile.m_fileSource);
         ZNet.m_onlineBackend=OnlineBackendType.CustomSocket;
@@ -98,6 +103,11 @@ public sealed class NetworkSmoke : BaseUnityPlugin
         {
             deadline=Time.realtimeSinceStartup+30;
             while(!(bool)AccessTools.Property(ClockType,"Ready").GetValue(null)){Check(Time.realtimeSinceStartup<deadline,"Client clock synchronization timeout");yield return new WaitForSecondsRealtime(.1f);}
+            while(!sync.InitialSyncDone){Check(Time.realtimeSinceStartup<deadline,"ServerSync initial configuration timeout");yield return new WaitForSecondsRealtime(.1f);}
+            Check(serverVolume.Value==5,"Server volume did not replace local 20% with 500%");
+            Check(sync.IsLocked && !sync.IsAdmin,"Client must be locked non-admin");
+            serverVolume.Value=.1f;
+            Check(serverVolume.Value==5,"Non-admin changed server volume");
             File.WriteAllText(Path.Combine(coord,"client-ready.txt"),"ready");
         }
         Component? musician=null;AudioSource? audio=null;
@@ -111,6 +121,21 @@ public sealed class NetworkSmoke : BaseUnityPlugin
         }
         Check(musician!=null && audio!=null,"Missing playback");
         var actual=audio!;var component=musician!;
+        var amplifier=actual.GetComponent(typeof(BardBox.Plugin).Assembly.GetType("BardBox.MusicAmplifier"));
+        Check(amplifier!=null && (float)AccessTools.Field(amplifier.GetType(),"Gain").GetValue(amplifier)==5,"Emitter did not apply synchronized 500% gain");
+        var pcm=new[]{.1f,-.1f};AccessTools.Method(amplifier.GetType(),"OnAudioFilterRead").Invoke(amplifier,new object[]{pcm,1});
+        Check(pcm[0]==.5f && pcm[1]==-.5f,"Emitter PCM is not amplified fivefold");
+        if(!host)File.WriteAllText(Path.Combine(coord,"client-gain-checked.txt"),"ready");
+        else
+        {
+            deadline=Time.realtimeSinceStartup+30;
+            while(!File.Exists(Path.Combine(coord,"client-gain-checked.txt"))){Check(Time.realtimeSinceStartup<deadline,"Client gain check timeout");yield return new WaitForSecondsRealtime(.1f);}
+            serverVolume.Value=3;
+        }
+        deadline=Time.realtimeSinceStartup+15;
+        while(serverVolume.Value!=3 || (float)AccessTools.Field(amplifier.GetType(),"Gain").GetValue(amplifier)!=3)
+        {Check(Time.realtimeSinceStartup<deadline,"Live server volume update timeout");yield return new WaitForSecondsRealtime(.1f);}
+        File.WriteAllText(Path.Combine(folder,"serversync-result.txt"),"PASS "+role+": 500% initial sync, locked client config, emitter PCM gain 5x, live update to 300%.");
         double maxError=0;int count=0;
         using(var writer=new StreamWriter(Path.Combine(folder,"network-sync.csv")))
         {
@@ -132,8 +157,7 @@ public sealed class NetworkSmoke : BaseUnityPlugin
         {
             Check(player.GetSEMan().HaveStatusEffect("NorskIT_BardBox_SE_trailblazer".GetStableHashCode()),"Remote music buff missing");
             // A genuine receiver can mute/reenter and must catch up, not restart.
-            var plugin=AccessTools.Field(typeof(BardBox.Plugin),"Instance").GetValue(null);
-            var volume=(BepInEx.Configuration.ConfigEntry<float>)AccessTools.Field(typeof(BardBox.Plugin),"Volume").GetValue(plugin);
+            var volume=personalVolume;
             volume.Value=0;yield return new WaitForSecondsRealtime(.6f);Check(!actual.isPlaying,"Mute failed");
             volume.Value=.5f;yield return new WaitForSecondsRealtime(.4f);
             Check(actual.isPlaying && actual.time>5,"Unmute restarted remote song");

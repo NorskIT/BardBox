@@ -18,10 +18,13 @@ namespace BardBox;
 [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod,VersionStrictness.Patch)]
 public sealed class Plugin : BaseUnityPlugin
 {
-    public const string Id="norskit_bardbox_plugin",Version="0.1.3";
+    public const string Id="norskit_bardbox_plugin",Version="0.1.4";
     internal static Plugin Instance=null!;
     internal string Folder="";
     internal ConfigEntry<float> Volume=null!;
+    internal ConfigEntry<float> ListenerVolume=null!;
+    internal ServerSync.ConfigSync Sync=null!;
+    private float serverVolume;
     internal ConfigEntry<bool> ShockwavesEnabled=null!;
     internal ConfigEntry<bool> SyncDiagnostics=null!;
     internal ConfigEntry<bool> TogglePlayback=null!;
@@ -32,12 +35,30 @@ public sealed class Plugin : BaseUnityPlugin
     private void Awake()
     {
         Instance=this;Folder=Path.GetDirectoryName(Info.Location)!;
-        Volume=Config.Bind("Audio","Volume",0.5f,new ConfigDescription("Local music volume. Does not change buffs.",new AcceptableValueRange<float>(0,1)));
+        Sync=new ServerSync.ConfigSync(Id){DisplayName="BardBox",CurrentVersion=Version,MinimumRequiredVersion=Version,ModRequired=true,IsLocked=true};
+        Volume=Config.Bind("Audio","Volume",0.5f,new ConfigDescription("Server music volume: 1 = 100%, 5 = 500%. High gain may distort loud recordings. [Synced with Server]",new AcceptableValueRange<float>(0,5)));
+        Sync.AddConfigEntry(Volume).SynchronizedConfig=true;
+        serverVolume=Volume.Value;Volume.SettingChanged+=VolumeChanged;
+        ListenerVolume=Config.Bind("Audio","ListenerVolume",1f,new ConfigDescription("Personal volume multiplier: 0 mutes, 1 uses the full server volume. Does not change buffs. [Local]",new AcceptableValueRange<float>(0,1)));
+        Sync.AddConfigEntry(ListenerVolume).SynchronizedConfig=false;
         ShockwavesEnabled=Config.Bind("Visuals","ShockwavesEnabled",true,"Show local music shockwaves on strong bass/energy onsets.");
         SyncDiagnostics=Config.Bind("Diagnostics","SyncLogging",false,"Log music clock estimates and actual/expected audio positions for multiplayer testing.");
         TogglePlayback=Config.Bind("Controls","TogglePlayback",false,"False: hold Attack to play. True: press Attack once to play, again to stop. Interruptions still stop music.");
-        harmony=new Harmony(Id);harmony.PatchAll();
+        Sync.AddConfigEntry(ShockwavesEnabled).SynchronizedConfig=false;
+        Sync.AddConfigEntry(TogglePlayback).SynchronizedConfig=false;
+        Sync.AddConfigEntry(SyncDiagnostics).SynchronizedConfig=false;
+        harmony=new Harmony(Id);
+        // ServerSync installs its own patches; only patch BardBox gameplay classes here.
+        foreach(var type in new[]{typeof(MusicControls),typeof(MusicSail),typeof(MusicTooltip)})harmony.CreateClassProcessor(type).Patch();
         PrefabManager.OnVanillaPrefabsAvailable+=Register;
+    }
+    private void VolumeChanged(object sender,EventArgs args)
+    {
+        // ServerSync locks UI edits and network writes. Keep manual local reloads
+        // from overriding the effective server gain on a locked client as well.
+        if(!Sync.IsSourceOfTruth && Sync.IsLocked && !ServerSync.ConfigSync.ProcessingServerUpdate)
+        {if(Volume.Value!=serverVolume)Volume.Value=serverVolume;return;}
+        serverVolume=Volume.Value;
     }
     internal void Warn(string message)=>Logger.LogWarning(message);
     internal void Trace(string message){if(SyncDiagnostics.Value)Logger.LogInfo("Music sync: "+message);}
