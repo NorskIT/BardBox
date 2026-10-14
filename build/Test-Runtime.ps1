@@ -1,4 +1,4 @@
-param([switch]$PoseBaseline,[switch]$World,[ValidateSet('','host','client')][string]$NetworkRole='', [string]$Coordination='')
+param([switch]$PoseBaseline,[switch]$World,[ValidateSet('','host','client')][string]$NetworkRole='', [string]$Coordination='', [string]$NoRangedDll='')
 $ErrorActionPreference='Stop'
 $root=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $game='C:\Program Files (x86)\Steam\steamapps\common\Valheim'
@@ -14,6 +14,11 @@ if(Test-Path "$bep/plugins/ValheimModding-JsonDotNET"){Copy-Item -LiteralPath "$
 Copy-Item -LiteralPath "$root/src/BardBox/bin/Release/netstandard2.1/BardBox.dll","$root/tests/RuntimeSmoke/bin/Release/netstandard2.1/BardBox.RuntimeSmoke.dll","$root/assets/bundle/bardbox.assets" -Destination $plugin
 Copy-Item -Path "$root/assets/icons/*.png" -Destination "$plugin/icons"
 Copy-Item -Path "$root/assets/audio/*.wav" -Destination "$plugin/songs"
+if($NoRangedDll){
+    $noRanged=Join-Path $stage 'BepInEx/plugins/NoRanged'
+    New-Item -ItemType Directory -Force $noRanged | Out-Null
+    Copy-Item -LiteralPath $NoRangedDll -Destination (Join-Path $noRanged 'NoRanged.dll')
+}
 $priorTarget=$env:DOORSTOP_TARGET_ASSEMBLY
 $priorOutput=$env:BARD_SMOKE_OUTPUT
 $priorBaseline=$env:BARD_POSE_BASELINE

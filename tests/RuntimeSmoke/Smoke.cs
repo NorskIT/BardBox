@@ -32,7 +32,7 @@ public sealed class Smoke : BaseUnityPlugin
         try { PrepareDressedPlayer(); }
         catch(Exception e){File.WriteAllText(Path.Combine(folder,"result.txt"),"FAIL preparing player\n"+e);Application.Quit();yield break;}
         yield return new WaitForSecondsRealtime(2);
-        try { CheckPlayerAnimation();Run(); }
+        try { CheckPlayerAnimation();Run();CheckNoRangedCompatibility(); }
         catch(Exception e){File.WriteAllText(Path.Combine(folder,"result.txt"),"FAIL\n"+e);Logger.LogError(e);}
         if(!File.Exists(Path.Combine(folder,"result.txt")))
         {
@@ -383,6 +383,40 @@ public sealed class Smoke : BaseUnityPlugin
             Logger.LogInfo(id+" audio: "+clip.length+" s");
         }
         Preview(PrefabManager.Instance.GetPrefab(prefix+"Boombox"));
+    }
+    private void CheckNoRangedCompatibility()
+    {
+        if(!BepInEx.Bootstrap.Chainloader.PluginInfos.TryGetValue("norskit_noranged_plugin",out var info))return;
+        var plugin=info.Instance;
+        var player=FejdStartup.instance.GetPreviewPlayer();
+        var prior=Player.m_localPlayer;
+        Player.m_localPlayer=player;
+        try
+        {
+            var names=new[]{"trailblazer","second_wind","stonebeat","hauler","heartbeat","steady_rhythm","iron_chorus","tailwind","needle_guard","arcane_pulse","war_drums"};
+            AccessTools.Method(plugin.GetType(),"DisableRangedRecipes").Invoke(plugin,null);
+            foreach(var id in names)
+            {
+                var item=Equip(player,"NorskIT_BardBox_"+id);
+                Check(player.GetAmmoItem()==item,"Tape not selected: "+id);
+                Check(ObjectDB.instance.GetRecipe(item).m_enabled,"Tape recipe disabled: "+id);
+                var craftGate=plugin.GetType().Assembly.GetType("NoRanged.CraftGate");
+                object[] args={ObjectDB.instance.GetRecipe(item),true};
+                Check((bool)AccessTools.Method(craftGate,"Prefix").Invoke(null,args),"Tape crafting gate rejected: "+id);
+                player.UnequipItem(item,false);player.GetInventory().RemoveItem(item);
+            }
+            foreach(var name in new[]{"ArrowWood","Bow"})
+            {
+                var prefab=PrefabManager.Instance.GetPrefab(name);
+                var item=prefab.GetComponent<ItemDrop>().m_itemData.Clone();item.m_dropPrefab=prefab;
+                player.GetInventory().GetAllItems().Add(item);
+                Check(!player.EquipItem(item,false),"No Ranged allowed "+name);
+                Check(!ObjectDB.instance.GetRecipe(item).m_enabled,"No Ranged enabled recipe "+name);
+                player.GetInventory().RemoveItem(item);
+            }
+            File.WriteAllText(Path.Combine(folder,"noranged-result.txt"),"PASS: No Ranged "+info.Metadata.Version+"; all 11 tapes equip/select and retain enabled recipes; crafting gate allows tapes; bow/arrow equipment and recipes remain blocked.");
+        }
+        finally {Player.m_localPlayer=prior;}
     }
     private void Preview(GameObject prefab)
     {
