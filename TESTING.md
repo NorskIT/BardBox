@@ -263,3 +263,31 @@ network/audio tests and the new loot checks: native boss item spawn and chest
 inventory resolve to the same ZDO IDs on both peers; the receiving client gets
 one level-I tape; transfer of chest ownership does not trigger another roll.
 No exception/error entries were found in these three final game logs.
+
+
+## 0.1.7 dedicated/headless crash regression
+
+The reported Linux crash has a managed call chain from Plugin.LateUpdate through
+AudioRangeDebug.Tick/TextFocused into GUIUtility.Internal_GetKeyboardControl.
+The query ran before checking debug visibility or local-player presence, so even
+the default disabled debug setting could reach a GUI API in a server build.
+
+Before the fix, an isolated Windows client launched with -batchmode -nographics
+reported a real Null graphics device. Intercepting the unsafe TextFocused call
+prevented a native crash and recorded 222 GUI-focus calls, 222 playback updates
+and 222 ducking updates: artifacts/smoke-20261015-004819/headless-result.txt.
+
+The fixed build removes the shortcut/focus query altogether and gates client
+presentation on both graphics availability and dedicated-server status.
+The updated regression passes in artifacts/smoke-20261015-005041: zero scheduled
+debug/audio/ducking calls, safe direct debug entry points with ShowAudioRange=true,
+normal item registration, and continued music-clock/radio-relay update calls.
+Run this check with build/Test-Runtime.ps1 -Headless.
+
+This is a Windows Null-graphics regression, not a Linux dedicated-server launch.
+The production server was not modified or restarted during verification.
+
+Client presentation checks passed in artifacts/smoke-20261015-004939:
+20/500/2000 m world-zone geometry, live updates/cleanup, music attenuation and
+restoration still work with the shortcut removed. This run uses the simulated
+independent mute owner; the real ForestCrawler helper was covered in 0.1.5.

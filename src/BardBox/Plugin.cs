@@ -18,7 +18,7 @@ namespace BardBox;
 [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod,VersionStrictness.Patch)]
 public sealed class Plugin : BaseUnityPlugin
 {
-    public const string Id="norskit_bardbox_plugin",Version="0.1.6";
+    public const string Id="norskit_bardbox_plugin",Version="0.1.7";
     internal static Plugin Instance=null!;
     internal string Folder="";
     internal ConfigEntry<float> Volume=null!;
@@ -27,12 +27,13 @@ public sealed class Plugin : BaseUnityPlugin
     private float serverVolume,serverRange;
     internal ConfigEntry<float> AudioRange=null!;
     internal ConfigEntry<bool> MuteGameMusic=null!,ShowAudioRange=null!;
-    internal ConfigEntry<KeyboardShortcut> ToggleAudioRangeKey=null!;
     internal ConfigEntry<bool> ShockwavesEnabled=null!;
     internal ConfigEntry<bool> SyncDiagnostics=null!;
     internal ConfigEntry<bool> TogglePlayback=null!;
     internal Material? ShockwaveMaterial;
     internal static bool Ready;
+    // Dedicated/headless builds must never enter Unity GUI, input or presentation APIs.
+    internal static bool ClientPresentation=>SystemInfo.graphicsDeviceType!=UnityEngine.Rendering.GraphicsDeviceType.Null && (!ZNet.instance || !ZNet.instance.IsDedicated());
     private Harmony harmony=null!;
     private AssetBundle? bundle;
     private void Awake()
@@ -47,10 +48,8 @@ public sealed class Plugin : BaseUnityPlugin
         AudioRange.Value=RadioRules.Range(AudioRange.Value);serverRange=AudioRange.Value;AudioRange.SettingChanged+=RangeChanged;
         MuteGameMusic=Config.Bind("Audio","MuteGameMusic",true,"Fade game music out while a boombox is audible. [Local]");
         ShowAudioRange=Config.Bind("Debug","ShowAudioRange",false,"Show boombox sound radii in the world. [Local]");
-        ToggleAudioRangeKey=Config.Bind("Debug","ToggleAudioRangeKey",new KeyboardShortcut(KeyCode.None),"Optional shortcut to toggle audio range visualization. [Local]");
         Sync.AddConfigEntry(MuteGameMusic).SynchronizedConfig=false;
         Sync.AddConfigEntry(ShowAudioRange).SynchronizedConfig=false;
-        Sync.AddConfigEntry(ToggleAudioRangeKey).SynchronizedConfig=false;
         ListenerVolume=Config.Bind("Audio","ListenerVolume",1f,new ConfigDescription("Personal volume multiplier: 0 mutes, 1 uses the full server volume. Does not change buffs. [Local]",new AcceptableValueRange<float>(0,1)));
         Sync.AddConfigEntry(ListenerVolume).SynchronizedConfig=false;
         ShockwavesEnabled=Config.Bind("Visuals","ShockwavesEnabled",true,"Show local music shockwaves on strong bass/energy onsets.");
@@ -86,7 +85,7 @@ public sealed class Plugin : BaseUnityPlugin
         PrefabManager.OnVanillaPrefabsAvailable-=Register;
         try
         {
-            bool headless=SystemInfo.graphicsDeviceType==UnityEngine.Rendering.GraphicsDeviceType.Null;
+            bool headless=!ClientPresentation;
             if(!headless)
             {
                 var path=Path.Combine(Folder,"bardbox.assets");
@@ -177,10 +176,10 @@ public sealed class Plugin : BaseUnityPlugin
     }
     private void LateUpdate()
     {
-        if(!Ready)return;
+        if(!Ready || !ClientPresentation)return;
         RadioPlayback.Tick();MusicDucking.Tick(Time.unscaledDeltaTime);AudioRangeDebug.Tick();
     }
-    private void OnGUI(){if(Ready)AudioRangeDebug.Draw();}
+    private void OnGUI(){if(Ready && ClientPresentation)AudioRangeDebug.Draw();}
     private void OnDestroy()
     {
         Ready=false;PrefabManager.OnVanillaPrefabsAvailable-=Register;

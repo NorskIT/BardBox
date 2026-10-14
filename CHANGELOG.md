@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.7
+
+- Fix dedicated-server crash caused by the zone debug shortcut reading Unity GUI keyboard focus.
+- Remove the zone shortcut; retain the local Debug.ShowAudioRange setting.
+- Keep GUI and local audio presentation off dedicated/headless processes while retaining gameplay, the server clock and radio relay.
+
 ## 0.1.6
 
 - Replace tape crafting with 33% boss drops and 1% loot chances in four specific dungeon/village chest types.

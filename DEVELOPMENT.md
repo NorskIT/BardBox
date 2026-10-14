@@ -1,4 +1,4 @@
-# BardBox 0.1.6 — development build
+# BardBox 0.1.7 — development build
 
 Craft a Boombox, select a reusable tape like ammunition, and hold Attack to play.
 Release to stop; each new press starts the sound from the beginning. Set
@@ -151,6 +151,14 @@ Audio.Range is server-synchronized and locked for non-admins, with a default of 
 
 The server relays small playback snapshots, using peer-owned character identity and server-known position. One-second heartbeats and a 3.5-second lease remove stale sources. Epoch and sequence checks reject old snapshots. Clients accept snapshots only from their server and create one local emitter per musician independently of loaded player objects. The same server clock and file hashes still control synchronization. No audio data or extra world objects are streamed.
 
-Debug.ShowAudioRange is local and off by default. Debug.ToggleAudioRangeKey is unbound by default and ignored when typing or unfocused. Three world-space circles outline the sound sphere, with a radius label. Camera visibility still limits how much of a very large sphere can be seen. No map markers or terrain reveal are added.
+Debug.ShowAudioRange is local and off by default. Three world-space circles outline the sound sphere, with a radius label. Camera visibility still limits how much of a very large sphere can be seen. No map markers or terrain reveal are added.
 
 Audio.MuteGameMusic is local and enabled by default. A PCM filter fades only the actual MusicMan source down over 0.5 seconds and back over 1 second; it never edits music preferences, native source volume or mute flags. Personal mute, missing/mismatched songs and leaving range release the attenuation. A new MusicMan source gets its own filter; old filters are released.
+
+
+## Dedicated-server presentation guard (0.1.7)
+
+GUI, input and local audio presentation never run on a dedicated or Null-graphics
+process. The server clock and radio relay continue updating. The zone shortcut and
+its keyboard-focus query have been removed; use Debug.ShowAudioRange on a client.
+An old ToggleAudioRangeKey config entry is ignored.

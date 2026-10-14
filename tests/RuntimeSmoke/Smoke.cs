@@ -25,7 +25,7 @@ public sealed class Smoke : BaseUnityPlugin
     private static bool SkipPose()=>false;
     private IEnumerator Start()
     {
-        if(!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BARD_NETWORK_ROLE")))yield break;
+        if(Environment.GetEnvironmentVariable("BARD_HEADLESS_TEST")=="1" || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BARD_NETWORK_ROLE")))yield break;
         folder=Environment.GetEnvironmentVariable("BARD_SMOKE_OUTPUT")??"";
         if(folder.Length==0)yield break;
         yield return new WaitForSecondsRealtime(25);

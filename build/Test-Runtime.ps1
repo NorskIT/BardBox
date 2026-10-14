@@ -1,4 +1,4 @@
-param([switch]$PoseBaseline,[switch]$World,[ValidateSet('','host','client')][string]$NetworkRole='', [string]$Coordination='', [string]$NoRangedDll='', [string]$ForestMusicDll='')
+param([switch]$Headless,[switch]$PoseBaseline,[switch]$World,[ValidateSet('','host','client')][string]$NetworkRole='', [string]$Coordination='', [string]$NoRangedDll='', [string]$ForestMusicDll='')
 $ErrorActionPreference='Stop'
 $root=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $game='C:\Program Files (x86)\Steam\steamapps\common\Valheim'
@@ -19,6 +19,7 @@ if($NoRangedDll){
     New-Item -ItemType Directory -Force $noRanged | Out-Null
     Copy-Item -LiteralPath $NoRangedDll -Destination (Join-Path $noRanged 'NoRanged.dll')
 }
+$priorHeadless=$env:BARD_HEADLESS_TEST
 $priorForest=$env:BARD_FOREST_MUSIC_DLL
 $priorTarget=$env:DOORSTOP_TARGET_ASSEMBLY
 $priorOutput=$env:BARD_SMOKE_OUTPUT
@@ -27,6 +28,7 @@ $priorWorld=$env:BARD_WORLD_TEST
 $priorNetworkRole=$env:BARD_NETWORK_ROLE
 $priorNetworkCoord=$env:BARD_NETWORK_COORD
 try {
+    $env:BARD_HEADLESS_TEST=if($Headless){'1'}else{'0'}
     $env:BARD_FOREST_MUSIC_DLL=$ForestMusicDll
     $env:BARD_NETWORK_ROLE=$NetworkRole
     $env:BARD_NETWORK_COORD=$Coordination
@@ -34,10 +36,12 @@ try {
     $env:BARD_POSE_BASELINE=if($PoseBaseline){'1'}else{'0'}
     $env:DOORSTOP_TARGET_ASSEMBLY="$stage/BepInEx/core/BepInEx.Preloader.dll"
     $env:BARD_SMOKE_OUTPUT=$stage
-    $process=Start-Process -FilePath "$game/valheim.exe" -WorkingDirectory $stage -WindowStyle Hidden -PassThru -ArgumentList @('-batchmode','-screen-width','640','-screen-height','480','-savedir',('"'+"$stage/saves"+'"'),'-logFile',('"'+"$stage/unity.log"+'"'),'--doorstop-enabled','true','--doorstop-target-assembly',('"'+$env:DOORSTOP_TARGET_ASSEMBLY+'"'))
+    [string[]]$graphicsArgs=if($Headless){@('-nographics')}else{@()}
+    $process=Start-Process -FilePath "$game/valheim.exe" -WorkingDirectory $stage -WindowStyle Hidden -PassThru -ArgumentList ($graphicsArgs+@('-batchmode','-screen-width','640','-screen-height','480','-savedir',('"'+"$stage/saves"+'"'),'-logFile',('"'+"$stage/unity.log"+'"'),'--doorstop-enabled','true','--doorstop-target-assembly',('"'+$env:DOORSTOP_TARGET_ASSEMBLY+'"')))
     $process.Id | Set-Content "$stage/process-id.txt"
     Write-Output "Isolated smoke process $($process.Id): $stage"
 } finally {
+    $env:BARD_HEADLESS_TEST=$priorHeadless
     $env:BARD_FOREST_MUSIC_DLL=$priorForest
     $env:DOORSTOP_TARGET_ASSEMBLY=$priorTarget
     $env:BARD_SMOKE_OUTPUT=$priorOutput

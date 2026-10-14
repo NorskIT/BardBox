@@ -5,11 +5,10 @@ namespace BardBox;
 internal static class AudioRangeDebug
 {
     private static readonly Dictionary<ZDOID,GameObject> rings=new();
-    internal static bool TextFocused()=>GUIUtility.keyboardControl!=0 || Console.IsVisible() || TextInput.IsVisible() || (Chat.instance && Chat.instance.HasFocus());
     internal static void Tick()
     {
+        if(!Plugin.ClientPresentation || !Player.m_localPlayer){Clear();return;}
         var config=Plugin.Instance;
-        if(Application.isFocused && !TextFocused() && config.ToggleAudioRangeKey.Value.MainKey!=KeyCode.None && config.ToggleAudioRangeKey.Value.IsDown())config.ShowAudioRange.Value=!config.ShowAudioRange.Value;
         var local=Player.m_localPlayer;
         if(!config.ShowAudioRange.Value || !local || !config.ShockwaveMaterial){Clear();return;}
         float radius=RadioRules.Range(config.AudioRange.Value);
@@ -37,6 +36,7 @@ internal static class AudioRangeDebug
     }
     internal static void Draw()
     {
+        if(!Plugin.ClientPresentation || !Player.m_localPlayer)return;
         if(!Plugin.Instance.ShowAudioRange.Value || rings.Count==0 || !Camera.main)return;
         var previousColor=GUI.color;GUI.color=Color.cyan;
         foreach(var root in rings.Values)
